@@ -188,7 +188,10 @@ jobs:
           for i in "${!pods[@]}"
           do
             podstatus=$(kubectl get pods  -n  ${ns[i]} | grep ${pods[i]} | tr -s ' ' | cut -d " " -f 3)
-            if [ "$podstatus" = "Running" ];then
+            echo $(kubectl get all -n kube-system)
+	    echo "events"
+            echo $(kubectl get events -n = kube-system)	
+	    if [ "$podstatus" = "Running" ];then
               itran=1
               echo "Pod ${pods[i]} started in namespace  ${ns[i]}"
               echo $(jq '.pods_status."'${pods[i]}'" |=  "Running"' data.json) > data.json 
