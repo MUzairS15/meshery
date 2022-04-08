@@ -167,9 +167,7 @@ jobs:
           breakout=1
           
           while [ $SECONDS -lt $end ]; do
-              kubectl get pods -n kube-system
-              echo "events"
-              kubectl get events -n kube-system
+             
               for i in "${!pods[@]}"
               do
                   podstatus=$(kubectl get pods  -n  ${ns[i]} | grep ${pods[i]} | tr -s ' ' | cut -d " " -f 3)
@@ -202,6 +200,9 @@ jobs:
               exitstatus=1
             fi
           done
+           kubectl get pods -n kube-system
+           echo "events"
+           kubectl get events -n kube-system
           status=""
           if [ "$exitstatus" -eq 0 ];then
               status="passing"       
