@@ -171,6 +171,8 @@ jobs:
               for i in "${!pods[@]}"
               do
                   podstatus=$(kubectl get pods  -n  ${ns[i]} | grep ${pods[i]} | tr -s ' ' | cut -d " " -f 3)
+                  echo "podsttus"
+                  echo $podstatus
                   if [ "$podstatus" != "Running" ];then
                     breakout=0
                   fi
@@ -200,9 +202,7 @@ jobs:
               exitstatus=1
             fi
           done
-           kubectl get pods -n kube-system
-           echo "events"
-           kubectl get events -n kube-system
+           
           status=""
           if [ "$exitstatus" -eq 0 ];then
               status="passing"       
@@ -212,6 +212,9 @@ jobs:
           if [ "$itran" -eq 1 ] && [ "$itdidnotrun" -eq 1  ] ;then
               status="partial"
           fi
+          kubectl get pods -n kube-system
+          echo "events"
+          kubectl get events -n kube-system
           echo $(jq '."overall-status" |=  "'$status'"' data.json) > data.json;     
           MESHERY_VERSION=$(curl -L -s https://github.com/meshery/meshery/releases/latest | grep "/releases/tag/" | head -1 | awk -F '"' '{print $4}' | awk -F '/' '{print $NF}' )    
           echo $(jq '.metadata."meshery-server-version" |="'$MESHERY_VERSION'"' data.json ) > data.json
