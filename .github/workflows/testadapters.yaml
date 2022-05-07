@@ -180,7 +180,7 @@ jobs:
           runon=$(date)
           itran=0
           itdidnotrun=0
-          echo $(kubectl get pods  -n  ${ns[i]} | grep "cilium")
+          echo $(kubectl get pods  -n  meshery | grep "cilium")
           echo "Ran on $runon"
           echo '{"metadata":{ "k8s_version":"'${{ inputs.k8s_version }}'", "service_mesh_name":"'${{ inputs.adapter_name }}'", "service_mesh_version":"'${{ inputs.sm_version }}'","adapter_version":"'${{inputs.adapter_version }}'" ,"runon":"'$runon'"}, "pods_status":{},"overall-status":""}' | jq > ./data.json
           for i in "${!pods[@]}"
