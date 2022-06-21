@@ -66,10 +66,10 @@ func NewRouter(ctx context.Context, h models.HandlerInterface, port int, g http.
 		Methods("POST")
 	gMux.Handle("/api/system/kubernetes/contexts", h.ProviderMiddleware(h.AuthMiddleware(h.SessionInjectorMiddleware(h.GetAllContexts)))).
 		Methods("GET")
-	gMux.Handle("/api/system/kubernetes/contexts/current", h.ProviderMiddleware(h.AuthMiddleware(h.SessionInjectorMiddleware(h.GetCurrentContextHandler)))).
-		Methods("GET")
-	gMux.Handle("/api/system/kubernetes/contexts/current/{id}", h.ProviderMiddleware(h.AuthMiddleware(h.SessionInjectorMiddleware(h.SetCurrentContextHandler)))).
-		Methods("POST")
+	// gMux.Handle("/api/system/kubernetes/contexts/current", h.ProviderMiddleware(h.AuthMiddleware(h.SessionInjectorMiddleware(h.GetCurrentContextHandler)))).
+	// 	Methods("GET")
+	// gMux.Handle("/api/system/kubernetes/contexts/current/{id}", h.ProviderMiddleware(h.AuthMiddleware(h.SessionInjectorMiddleware(h.SetCurrentContextHandler)))).
+	// 	Methods("POST")
 	gMux.Handle("/api/system/kubernetes/contexts/{id}", h.ProviderMiddleware(h.AuthMiddleware(h.SessionInjectorMiddleware(h.GetContext)))).
 		Methods("GET")
 	gMux.Handle("/api/system/kubernetes/contexts/{id}", h.ProviderMiddleware(h.AuthMiddleware(h.SessionInjectorMiddleware(h.DeleteContext)))).
@@ -184,6 +184,10 @@ func NewRouter(ctx context.Context, h models.HandlerInterface, port int, g http.
 		Methods("DELETE")
 	gMux.Handle("/api/user/schedules", h.ProviderMiddleware(h.AuthMiddleware(h.SessionInjectorMiddleware(h.SaveScheduleHandler)))).
 		Methods("POST")
+
+	gMux.PathPrefix("/api/extensions").
+		Handler(h.ProviderMiddleware(h.AuthMiddleware(h.SessionInjectorMiddleware(h.ExtensionsHandler)))).
+		Methods("GET", "POST", "OPTIONS", "PUT", "DELETE")
 
 	//gMux.PathPrefix("/api/system/graphql").Handler(h.ProviderMiddleware(h.AuthMiddleware(h.SessionInjectorMiddleware(h.GraphqlSystemHandler)))).Methods("GET", "POST")
 

@@ -5,7 +5,6 @@ import (
 	"bytes"
 	"compress/gzip"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -13,7 +12,6 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
-	"regexp"
 	"strconv"
 	"strings"
 	"sync"
@@ -203,17 +201,17 @@ func (l *DefaultLocalProvider) LoadAllK8sContext(token string) ([]*K8sContext, e
 	return results, nil
 }
 
-func (l *DefaultLocalProvider) SetCurrentContext(token, id string) (K8sContext, error) {
-	if err := l.MesheryK8sContextPersister.SetMesheryK8sCurrentContext(id); err != nil {
-		return K8sContext{}, err
-	}
+// func (l *DefaultLocalProvider) SetCurrentContext(token, id string) (K8sContext, error) {
+// 	if err := l.MesheryK8sContextPersister.SetMesheryK8sCurrentContext(id); err != nil {
+// 		return K8sContext{}, err
+// 	}
 
-	return l.MesheryK8sContextPersister.GetMesheryK8sContext(id)
-}
+// 	return l.MesheryK8sContextPersister.GetMesheryK8sContext(id)
+// }
 
-func (l *DefaultLocalProvider) GetCurrentContext(token string) (K8sContext, error) {
-	return l.MesheryK8sContextPersister.GetMesheryK8sCurrentContext()
-}
+// func (l *DefaultLocalProvider) GetCurrentContext(token string) (K8sContext, error) {
+// 	return l.MesheryK8sContextPersister.GetMesheryK8sCurrentContext()
+// }
 
 // FetchResults - fetches results from provider backend
 func (l *DefaultLocalProvider) FetchResults(tokenVal, page, pageSize, search, order, profileID string) ([]byte, error) {
@@ -915,6 +913,10 @@ func (l *DefaultLocalProvider) RecordMeshSyncData(obj model.Object) error {
 	return nil
 }
 
+func (l *DefaultLocalProvider) ExtensionProxy(req *http.Request) ([]byte, error) {
+	return []byte{}, ErrLocalProviderSupport
+}
+
 // ReadMeshSyncData reads the mesh sync data
 func (l *DefaultLocalProvider) ReadMeshSyncData() ([]model.Object, error) {
 	objects := make([]model.Object, 0)
@@ -950,14 +952,11 @@ func (l *DefaultLocalProvider) GetKubeClient() *mesherykube.Client {
 }
 
 // SeedContent- to seed various contents with local provider-like patterns, filters, and applications
-func (l *DefaultLocalProvider) SeedContent(log logger.Handler) []uuid.UUID {
+func (l *DefaultLocalProvider) SeedContent(log logger.Handler) {
 	seededUUIDs := make([]uuid.UUID, 0)
 	seedContents := []string{"Pattern", "Application", "Filter"}
-	var wg sync.WaitGroup
 	for _, seedContent := range seedContents {
-		wg.Add(1)
 		go func(comp string, log logger.Handler, seededUUIDs *[]uuid.UUID) {
-			defer wg.Done()
 			names, content, err := getSeededComponents(comp, log)
 			if err != nil {
 				log.Error(ErrGettingSeededComponents(err, comp))
@@ -1022,15 +1021,21 @@ func (l *DefaultLocalProvider) SeedContent(log logger.Handler) []uuid.UUID {
 			}
 		}(seedContent, log, &seededUUIDs)
 	}
-	wg.Wait()
-	return seededUUIDs
 }
-func (l *DefaultLocalProvider) CleanupSeeded(seededUUIDs []uuid.UUID) {
-	for _, id := range seededUUIDs {
-		_, _ = l.MesheryPatternPersister.DeleteMesheryPattern(id)
-		_, _ = l.MesheryFilterPersister.DeleteMesheryFilter(id)
-		_, _ = l.MesheryApplicationPersister.DeleteMesheryApplication(id)
+func (l *DefaultLocalProvider) Cleanup() error {
+	if err := l.MesheryK8sContextPersister.DB.Migrator().DropTable(&K8sContext{}); err != nil {
+		return err
 	}
+	if err := l.MesheryK8sContextPersister.DB.Migrator().DropTable(&MesheryPattern{}); err != nil {
+		return err
+	}
+	if err := l.MesheryK8sContextPersister.DB.Migrator().DropTable(&MesheryApplication{}); err != nil {
+		return err
+	}
+	if err := l.MesheryK8sContextPersister.DB.Migrator().DropTable(&MesheryFilter{}); err != nil {
+		return err
+	}
+	return nil
 }
 
 // githubRepoPatternScan & githubRepoFilterScan takes in github repo owner, repo name, path from where the file/files are needed
@@ -1474,26 +1479,26 @@ func getSeededAppLocation(path string) (map[string][]string, error) {
 	return applicationsAndURLS, nil
 }
 
-// GetLatestStableReleaseTag fetches and returns the latest release tag from GitHub
-func getLatestStableReleaseTag() (string, error) {
-	url := "https://github.com/layer5io/wasm-filters/releases/latest"
-	resp, err := http.Get(url)
-	if err != nil {
-		return "", errors.New("failed to get latest stable release tag")
-	}
-	defer SafeClose(resp.Body)
+// // GetLatestStableReleaseTag fetches and returns the latest release tag from GitHub
+// func getLatestStableReleaseTag() (string, error) {
+// 	url := "https://github.com/layer5io/wasm-filters/releases/latest"
+// 	resp, err := http.Get(url)
+// 	if err != nil {
+// 		return "", errors.New("failed to get latest stable release tag")
+// 	}
+// 	defer SafeClose(resp.Body)
 
-	if resp.StatusCode != http.StatusOK {
-		return "", errors.New("failed to get latest stable release tag")
-	}
+// 	if resp.StatusCode != http.StatusOK {
+// 		return "", errors.New("failed to get latest stable release tag")
+// 	}
 
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return "", errors.New("failed to get latest stable release tag")
-	}
-	re := regexp.MustCompile("/releases/tag/(.*?)\"")
-	releases := re.FindAllString(string(body), -1)
-	latest := strings.ReplaceAll(releases[0], "/releases/tag/", "")
-	latest = strings.ReplaceAll(latest, "\"", "")
-	return latest, nil
-}
+// 	body, err := ioutil.ReadAll(resp.Body)
+// 	if err != nil {
+// 		return "", errors.New("failed to get latest stable release tag")
+// 	}
+// 	re := regexp.MustCompile("/releases/tag/(.*?)\"")
+// 	releases := re.FindAllString(string(body), -1)
+// 	latest := strings.ReplaceAll(releases[0], "/releases/tag/", "")
+// 	latest = strings.ReplaceAll(latest, "\"", "")
+// 	return latest, nil
+// }

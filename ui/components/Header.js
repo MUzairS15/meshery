@@ -16,7 +16,6 @@ import SettingsIcon from '@material-ui/icons/Settings';
 import Chip from '@material-ui/core/Chip';
 import MesheryNotification from './MesheryNotification';
 import User from './User';
-import subscribeMeshSyncStatusEvents from './graphql/subscriptions/MeshSyncStatusSubscription';
 import subscribeBrokerStatusEvents from "./graphql/subscriptions/BrokerStatusSubscription"
 import Slide from '@material-ui/core/Slide';
 import ClickAwayListener from '@material-ui/core/ClickAwayListener';
@@ -31,42 +30,60 @@ import { deleteKubernetesConfig, pingKubernetes } from './ConnectionWizard/helpe
 import {
   successHandlerGenerator, errorHandlerGenerator, closeButtonForSnackbarAction, showProgress, hideProgress
 } from './ConnectionWizard/helpers/common';
+import { getFirstCtxIdFromSelectedCtxIds } from '../utils/multi-ctx';
+import { promisifiedDataFetch } from '../lib/data-fetch';
+import { updateK8SConfig } from '../lib/store';
+import { bindActionCreators } from 'redux';
+import BadgeAvatars from './CustomAvatar';
 const lightColor = 'rgba(255, 255, 255, 0.7)';
 const styles = (theme) => ({
   secondaryBar : { zIndex : 0, },
   menuButton : { marginLeft : -theme.spacing(1), },
   iconButtonAvatar : { padding : 4, },
-  link : { textDecoration : 'none',
+  link : {
+    textDecoration : 'none',
     color : lightColor,
-    '&:hover' : { color : theme.palette.common.white, }, },
+    '&:hover' : { color : theme.palette.common.white, },
+  },
   button : { borderColor : lightColor, },
-  notifications : { paddingLeft : theme.spacing(4),
+  notifications : {
+    paddingLeft : theme.spacing(4),
     paddingRight : theme.spacing(0),
-    marginLeft : theme.spacing(4), },
-  userContainer : { paddingLeft : 1,
-    display : 'flex', backgroundColor : "#396679" },
+    marginLeft : theme.spacing(4),
+  },
+  userContainer : {
+    paddingLeft : 1,
+    display : 'flex', backgroundColor : "#396679"
+  },
   userSpan : { marginLeft : theme.spacing(1), },
-  pageTitleWrapper : { flexGrow : 1,
-    marginRight : 'auto', },
+  pageTitleWrapper : {
+    flexGrow : 1,
+    marginRight : 'auto',
+  },
   betaBadge : { color : '#EEEEEE', fontWeight : '300', fontSize : '13px' },
-  pageTitle : { paddingLeft : theme.spacing(2),
+  pageTitle : {
+    paddingLeft : theme.spacing(2),
     fontSize : '1.25rem',
-    [theme.breakpoints.up('sm')] : { fontSize : '1.65rem', }, },
+    [theme.breakpoints.up('sm')] : { fontSize : '1.65rem', },
+  },
   appBarOnDrawerOpen : {
     backgroundColor : "#396679",
     shadowColor : " #808080",
-    zIndex : theme.zIndex.drawer+1,
-    [theme.breakpoints.between(635,732)] : { padding : theme.spacing(0.75,1.4), },
-    [theme.breakpoints.between(600,635)] : { padding : theme.spacing(0.4,1.4), },
+    zIndex : theme.zIndex.drawer + 1,
+    [theme.breakpoints.between(635, 732)] : { padding : theme.spacing(0.75, 1.4), },
+    [theme.breakpoints.between(600, 635)] : { padding : theme.spacing(0.4, 1.4), },
   },
   appBarOnDrawerClosed : {
     backgroundColor : "#396679",
-    zIndex : theme.zIndex.drawer+1, },
-  toolbarOnDrawerClosed : { minHeight : 59,
+    zIndex : theme.zIndex.drawer + 1,
+  },
+  toolbarOnDrawerClosed : {
+    minHeight : 59,
     padding : theme.spacing(2.4),
     paddingLeft : 34,
     paddingRight : 34,
-    backgroundColor : "#396679" },
+    backgroundColor : "#396679"
+  },
   toolbarOnDrawerOpen : {
     minHeight : 58,
     padding : theme.spacing(2.4),
@@ -99,7 +116,8 @@ const styles = (theme) => ({
     position : "relative"
   },
   icon : {
-    width : theme.spacing(2.5)
+    width : 24,
+    height : 24
   },
   Chip : {
     backgroundColor : "white",
@@ -136,12 +154,28 @@ const styles = (theme) => ({
   }
 });
 
+async function loadActiveK8sContexts() {
+  try {
+    const res = await promisifiedDataFetch("/api/system/sync")
+    if (res?.k8sConfig) {
+      return res.k8sConfig
+    } else {
+      throw new Error("No kubernetes configurations found")
+    }
+  } catch (e) {
+    console.error("An error occurred while loading k8sconfig", e)
+  }
+}
+
 function K8sContextMenu({
   classes = {},
   contexts = {},
   activeContexts = [],
-  setActiveContexts = () => {},
-  searchContexts = () => {}
+  runningStatus,
+  updateK8SConfig,
+
+  setActiveContexts = () => { },
+  searchContexts = () => { }
 }) {
   const [anchorEl, setAnchorEl] = React.useState(false);
   const [showFullContextMenu, setShowFullContextMenu] = React.useState(false);
@@ -154,23 +188,62 @@ function K8sContextMenu({
     left : "-5rem",
     zIndex : "-1",
     bottom : "-55%",
-    transform : showFullContextMenu ? `translateY(${transformProperty}%)`: "translateY(0)"
+    transform : showFullContextMenu ? `translateY(${transformProperty}%)` : "translateY(0)"
   }
 
-  const handleKubernetesClick = () => {
+  const getOperatorStatus = (contextId) => {
+    const state = runningStatus.operatorStatus;
+    if (!state) {
+      return false;
+    }
+
+    const context = state.find(st => st.contextID === contextId)
+    if (!context) {
+      return false;
+    }
+
+    return context.operatorStatus.status === "ENABLED";
+  }
+
+  const getMeshSyncStatus = (contextId) => {
+    const state = runningStatus.meshSyncStatus;
+    if (!state) {
+      return false;
+    }
+
+    const context = state.find(st => st.contextID === contextId)
+    if (!context) {
+      return false;
+    }
+
+    return context.OperatorControllerStatus.status?.includes("ENABLED");
+  }
+
+  const handleKubernetesClick = (id) => {
     showProgress()
+
     pingKubernetes(
-      successHandlerGenerator(enqueueSnackbar, closeButtonForSnackbarAction(closeSnackbar), "Kubernetes succesfully pinged", () => hideProgress()),
-      errorHandlerGenerator(enqueueSnackbar, closeButtonForSnackbarAction(closeSnackbar), "Kubernetes not pinged successfully", () => hideProgress())
+      successHandlerGenerator(enqueueSnackbar, closeButtonForSnackbarAction(closeSnackbar), "Kubernetes succesfully pinged", successCallback),
+      errorHandlerGenerator(enqueueSnackbar, closeButtonForSnackbarAction(closeSnackbar), "Kubernetes not pinged successfully", () => hideProgress()),
+      id
     )
-
   }
-  const handleKubernetesDelete = () => {
-    showProgress()
-    deleteKubernetesConfig(
-      successHandlerGenerator(enqueueSnackbar, closeButtonForSnackbarAction(closeSnackbar), "Kubernetes config successfully removed"),
-      errorHandlerGenerator(enqueueSnackbar, closeButtonForSnackbarAction(closeSnackbar), "Not able to remove config")
-    )
+
+  const handleKubernetesDelete = (name, ctxId) => () => {
+    if (confirm(`Are you sure you want to delete "${name}" cluster from Meshery?`)) {
+      const successCallback = async () => {
+        showProgress()
+        const updatedConfig = await loadActiveK8sContexts()
+        if (Array.isArray(updatedConfig)) {
+          updateK8SConfig({ k8sConfig : updatedConfig })
+        }
+      }
+      deleteKubernetesConfig(
+        successHandlerGenerator(enqueueSnackbar, closeButtonForSnackbarAction(closeSnackbar), "Kubernetes config successfully removed", successCallback),
+        errorHandlerGenerator(enqueueSnackbar, closeButtonForSnackbarAction(closeSnackbar), "Not able to remove config"),
+        ctxId
+      )
+    }
   }
 
 
@@ -180,7 +253,7 @@ function K8sContextMenu({
   }
 
   useEffect(() => {
-    setTransformProperty(prev => (prev + ( contexts.total_count ? contexts.total_count * 3.125 : 0 )))
+    setTransformProperty(prev => (prev + (contexts.total_count ? contexts.total_count * 3.125 : 0)))
   }, [])
 
   return (
@@ -190,18 +263,15 @@ function K8sContextMenu({
         className="k8s-icon-button"
         onClick={(e) => {
           e.preventDefault();
-          console.log(contexts);
           setShowFullContextMenu(prev => !prev);
         }}
         onMouseOver={(e) => {
           e.preventDefault();
-          console.log(contexts);
           setAnchorEl(true);
         }}
 
         onMouseLeave={(e) => {
           e.preventDefault();
-          console.log(contexts);
           setAnchorEl(false)
         }}
 
@@ -217,11 +287,11 @@ function K8sContextMenu({
         </div>
       </IconButton>
 
-      <Slide direction="down" style ={styleSlider} timeout={400} in={open} mountOnEnter unmountOnExit>
+      <Slide direction="down" style={styleSlider} timeout={400} in={open} mountOnEnter unmountOnExit>
         <div>
           <ClickAwayListener onClickAway={(e) => {
 
-            if (!e.target.className.includes("cbadge") && e.target.className !="k8s-image" && !e.target.className.includes("k8s-icon-button")) {
+            if (!e.target.className?.includes("cbadge") && e.target?.className != "k8s-image" && !e.target.className.includes("k8s-icon-button")) {
               setAnchorEl(false)
               setShowFullContextMenu(false)
             }
@@ -236,10 +306,12 @@ function K8sContextMenu({
                   variant="outlined"
                   onChange={ev => searchContexts(ev.target.value)}
                   style={{ width : "100%", backgroundColor : "rgba(102, 102, 102, 0.12)", margin : "1px 0px" }}
-                  InputProps={{ endAdornment :
-                (
-                  <Search className={classes.searchIcon} />
-                ) }}
+                  InputProps={{
+                    endAdornment :
+                      (
+                        <Search className={classes.searchIcon} />
+                      )
+                  }}
                 />
               </div>
               <div>
@@ -248,8 +320,8 @@ function K8sContextMenu({
                     ?
                     <>
                       <Checkbox
-                        checked={activeContexts.includes(".all")}
-                        onChange={() => setActiveContexts(".all")}
+                        checked={activeContexts.includes("all")}
+                        onChange={() => setActiveContexts("all")}
                         color="primary"
                       />
                       <span>Select All</span>
@@ -263,14 +335,25 @@ function K8sContextMenu({
                         size="large"
                         style={{ margin : "0.5rem 0.5rem", whiteSpace : "nowrap" }}
                       >
-                        <AddIcon className={classes.AddIcon}/>
-                      Connect Clusters
+                        <AddIcon className={classes.AddIcon} />
+                        Connect Clusters
                       </Button>
                     </Link>
                 }
-                {contexts?.contexts?.map(ctx => (
-                  <div id={ctx.id} className={classes.chip}>
-                    <Tooltip title={`Server: ${ctx.server}`}>
+                {contexts?.contexts?.map(ctx => {
+                  const meshStatus = getMeshSyncStatus(ctx.id);
+                  const operStatus = getOperatorStatus(ctx.id);
+
+                  function getStatus(status) {
+                    if (status) {
+                      return "Active"
+                    } else {
+                      return "InActive"
+                    }
+                  }
+
+                  return <div id={ctx.id} className={classes.chip}>
+                    <Tooltip title={`Server: ${ctx.server}, Meshsync: ${getStatus(meshStatus)}, Operator: ${getStatus(operStatus)}`}>
                       <div style={{ display : "flex", justifyContent : "flex-start", alignItems : "center" }}>
                         <Checkbox
                           checked={activeContexts.includes(ctx.id)}
@@ -279,9 +362,19 @@ function K8sContextMenu({
                         />
                         <Chip
                           label={ctx?.name}
-                          onDelete={handleKubernetesDelete}
-                          onClick={handleKubernetesClick}
-                          avatar={<Avatar src="/static/img/kubernetes.svg" className={classes.icon} />}
+                          onDelete={handleKubernetesDelete(ctx.name, ctx.id)}
+                          onClick={() => handleKubernetesClick(ctx.id)}
+                          avatar={
+                            meshStatus ?
+                              <BadgeAvatars>
+                                <Avatar src="/static/img/kubernetes.svg" className={classes.icon}
+                                  style={operStatus ? {} : { opacity : 0.2 }}
+                                />
+                              </BadgeAvatars> :
+                              <Avatar src="/static/img/kubernetes.svg" className={classes.icon}
+                                style={operStatus ? { margin : 8 } : { opacity : 0.2, margin : 8 }}
+                              />
+                          }
                           variant="filled"
                           className={classes.Chip}
                           data-cy="chipContextName"
@@ -289,7 +382,7 @@ function K8sContextMenu({
                       </div>
                     </Tooltip>
                   </div>
-                ))}
+                })}
 
               </div>
             </Paper>
@@ -302,45 +395,34 @@ function K8sContextMenu({
 }
 
 class Header extends React.Component {
-  constructor(props){
+  constructor(props) {
     super(props);
     this.state = {
-      meshSyncStatusSubscription : null,
       brokerStatusSubscription : null,
-      meshSyncStatus : {
-        name : "meshsync",
-        status : "DISABLED",
-        version : "v0.0.0",
-        error : null,
-      },
       brokerStatus : false,
     }
   }
-  componentDidMount(){
+
+  componentDidMount() {
     this._isMounted = true;
-    const meshSyncStatusSub = subscribeMeshSyncStatusEvents(data => this.setState({ meshSyncStatus : data?.listenToMeshSyncEvents }));
     const brokerStatusSub = subscribeBrokerStatusEvents(data => {
       console.log({ brokerData : data })
       this.setState({ brokerStatus : data?.subscribeBrokerConnection })
     });
-    this.setState({ meshSyncStatusSubscription : meshSyncStatusSub, brokerStatusSubscription : brokerStatusSub })
+    this.setState({ brokerStatusSubscription : brokerStatusSub })
+  }
+
+  getSelectedContextId = () => {
+    return getFirstCtxIdFromSelectedCtxIds(["all"], this.props.k8sconfig)
   }
 
   componentWillUnmount = () => {
     this._isMounted = false;
-    this.disposeSubscriptions()
   }
 
-  disposeSubscriptions = () => {
-    if (this.state.meshSyncStatusSubscription) {
-      this.state.meshSyncStatusSubscription.dispose();
-    }
-  }
 
   render() {
-    const {
-      classes, title, onDrawerToggle ,onDrawerCollapse ,isBeta
-    } = this.props;
+    const { classes, title, onDrawerToggle, onDrawerCollapse, isBeta } = this.props;
     return (
       <NoSsr>
         <React.Fragment>
@@ -368,34 +450,7 @@ class Header extends React.Component {
                     {title}{isBeta ? <sup className={classes.betaBadge}>BETA</sup> : ""}
                   </Typography>
                 </Grid>
-
-                {/* <Grid item className={classes.notifications}>
-                <MesheryNotification />
-              </Grid> */}
                 <Grid item className={classes.userContainer}>
-                  {/* <IconButton color="inherit" className={classes.iconButtonAvatar}>
-                  <Avatar className={classes.avatar} src="/static/images/avatar/1.jpg" />
-                </IconButton>
-                  <div data-test="index-button">
-                    <IconButton color="inherit">
-                      <Link href="/">
-                        <DashboardIcon className={ classes.headerIcons +" "+(title === 'System Dashboard' ? classes.itemActiveItem : '')} />
-                        <FontAwesomeIcon icon={faHome} transform="shrink-2" fixedWidth className={title === 'Dashboard' && classes.itemActiveItem} />
-                      </Link>
-                    </IconButton>
-                  </div>*/}
-                  {/* <div data-test="connection-wizard-button">
-                    <IconButton color="inherit">
-                      <Link href="/system/connections">
-                        <img src={title === 'Connection Wizard'
-                          ? "/static/img/connection_wizard/connection-wizard-green.svg"
-                          : "/static/img/connection_wizard/connection-wizard-white.svg"} className={ classes.headerIcons +" "+(title === 'Connection Wizard'
-                          ? classes.itemActiveItem
-                          : '')} />
-                        {/* <FontAwesomeIcon icon={faHome} transform="shrink-2" fixedWidth className={title === 'Dashboard' && classes.itemActiveItem} /> */}
-                  {/* </Link>
-                    </IconButton>
-                  </div> */}
                   <div className={classes.userSpan} style={{ position : "relative" }}>
                     <K8sContextMenu
                       classes={classes}
@@ -403,13 +458,15 @@ class Header extends React.Component {
                       activeContexts={this.props.activeContexts}
                       setActiveContexts={this.props.setActiveContexts}
                       searchContexts={this.props.searchContexts}
+                      runningStatus={{ operatorStatus : this.props.operatorState, meshSyncStatus : this.props.meshSyncState }}
+                      updateK8SConfig={this.props.updateK8SConfig}
                     />
                   </div>
 
                   <div data-test="settings-button">
                     <IconButton color="inherit">
                       <Link href="/settings">
-                        <SettingsIcon className={classes.headerIcons +" "+(title === 'Settings'
+                        <SettingsIcon className={classes.headerIcons + " " + (title === 'Settings'
                           ? classes.itemActiveItem
                           : '')} />
                       </Link>
@@ -419,19 +476,6 @@ class Header extends React.Component {
                   <div data-test="notification-button">
                     <MesheryNotification />
                   </div>
-
-                  <Tooltip title={this.state?.meshSyncStatus?.status === "ENABLED" ? "Active" : "Inactive" }>
-                    <IconButton>
-                      <Link href="/settings#environment">
-                        <img className={classes.headerIcons} src={this.state?.meshSyncStatus?.status === "ENABLED" ? "/static/img/meshsync.svg" : "/static/img/meshsync-white.svg"} />
-                      </Link>
-                    </IconButton>
-                  </Tooltip>
-
-                  {/* <Tooltip title="Broker Status">
-                    <div style={{ padding : "1rem", height : "2rem", width : "2rem", borderRadius : "50%", backgroundColor : this.state.brokerStatus ? "green" : "red" }} />
-                  </Tooltip>  */}
-
                   <span className={classes.userSpan}>
                     <User color="inherit" iconButtonClassName={classes.iconButtonAvatar} avatarClassName={classes.avatar} />
                   </span>
@@ -440,66 +484,29 @@ class Header extends React.Component {
               </Grid>
             </Toolbar>
           </AppBar>
-          {/* <AppBar
-          component="div"
-          className={classes.secondaryBar}
-          color="primary"
-          position="static"
-          elevation={0}
-        >
-          <Toolbar>
-            <Grid container alignItems="center" spacing={8}>
-              <Grid item xs>
-
-              </Grid>
-              {/* <Grid item>
-                <Button className={classes.button} variant="outlined" color="inherit" size="small">
-                  Web setup
-                </Button>
-              </Grid> * /}
-              {/* <Grid item>
-                <Tooltip title="Help">
-                  <IconButton color="inherit">
-                    <HelpIcon />
-                  </IconButton>
-                </Tooltip>
-              </Grid> * /}
-            </Grid>
-          </Toolbar>
-        </AppBar> */}
-          {/* <AppBar
-          component="div"
-          className={classes.secondaryBar}
-          color="primary"
-          position="static"
-          elevation={0}
-        >
-          <Tabs value={0} textColor="inherit">
-            <Tab textColor="inherit" label="Users" />
-            <Tab textColor="inherit" label="Sign-in method" />
-            <Tab textColor="inherit" label="Templates" />
-            <Tab textColor="inherit" label="Usage" />
-          </Tabs>
-        </AppBar> */}
         </React.Fragment>
       </NoSsr>
     );
   }
 }
 
-Header.propTypes = { classes : PropTypes.object.isRequired,
-  onDrawerToggle : PropTypes.func.isRequired, };
+Header.propTypes = {
+  classes : PropTypes.object.isRequired,
+  onDrawerToggle : PropTypes.func.isRequired,
+};
 
-const mapStateToProps = (state) =>
-  // console.log("header - mapping state to props. . . new title: "+ state.get("page").get("title"));
-  // console.log("state: " + JSON.stringify(state));
-  ({ title : state.get('page').get('title'), isBeta : state.get('page').get('isBeta') })
-;
+const mapStateToProps = (state) => {
+  return ({
+    title : state.get('page').get('title'),
+    isBeta : state.get('page').get('isBeta'),
+    selectedK8sContexts : state.get('selectedK8sContexts'),
+    k8sconfig : state.get('k8sConfig'),
+    operatorState : state.get('operatorState'),
+    meshSyncState : state.get('meshSyncState')
+  })
+};
 
-// const mapDispatchToProps = dispatch => {
-//   return {
-//     updatePageAndTitle: bindActionCreators(updatePageAndTitle, dispatch)
-//   }
-// }
+const mapDispatchToProps = (dispatch) => ({ updateK8SConfig : bindActionCreators(updateK8SConfig, dispatch), });
 
-export default withStyles(styles)(connect(mapStateToProps)(Header));
+
+export default withStyles(styles)(connect(mapStateToProps, mapDispatchToProps)(Header));

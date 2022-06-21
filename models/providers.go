@@ -54,6 +54,7 @@ type Extensions struct {
 	Navigator NavigatorExtensions `json:"navigator,omitempty"`
 	UserPrefs UserPrefsExtensions `json:"user_prefs,omitempty"`
 	GraphQL   GraphQLExtensions   `json:"graphql,omitempty"`
+	Acccount  AccountExtensions   `json:"account,omitempty"`
 }
 
 // NavigatorExtensions is a collection of NavigatorExtension
@@ -65,10 +66,14 @@ type UserPrefsExtensions []UserPrefsExtension
 // GraphQLExtensions is a collection of GraphQLExtension endpoints
 type GraphQLExtensions []GraphQLExtension
 
+// NavigatorExtensions is a collection of NavigatorExtension
+type AccountExtensions []AccountExtension
+
 // GraphQLExtension describes the graphql server extension point in the backend
 type GraphQLExtension struct {
 	Component string `json:"component,omitempty"`
 	Path      string `json:"path,omitempty"`
+	Type      string `json:"type,omitempty"`
 }
 
 // NavigatorExtension describes the Navigator extension point in the UI
@@ -81,11 +86,25 @@ type NavigatorExtension struct {
 	Link            *bool               `json:"link,omitempty"`
 	Show            *bool               `json:"show,omitempty"`
 	Children        NavigatorExtensions `json:"children,omitempty"`
+	Type            string              `json:"type,omitempty"`
+}
+
+// AccountExtension describes the Account extension point in the UI
+type AccountExtension struct {
+	Title           string            `json:"title,omitempty"`
+	OnClickCallback int               `json:"on_click_callback,omitempty"`
+	Href            Href              `json:"href,omitempty"`
+	Component       string            `json:"component,omitempty"`
+	Link            *bool             `json:"link,omitempty"`
+	Show            *bool             `json:"show,omitempty"`
+	Children        AccountExtensions `json:"children,omitempty"`
+	Type            string            `json:"type,omitempty"`
 }
 
 // UserPrefsExtension describes the user preference extension point in the UI
 type UserPrefsExtension struct {
 	Component string `json:"component,omitempty"`
+	Type      string `json:"type,omitempty"`
 }
 
 // Href describes a link along with its type
@@ -154,14 +173,8 @@ const (
 	// UserPrefsCtxKey is the context key for persisting user preferences to context
 	PerfObjCtxKey ContextKey = "perf_obj"
 
-	KubeHanderKey ContextKey = "kube_handler"
-
-	KubeConfigKey ContextKey = "kubeconfig"
-
-	KubeContextKey ContextKey = "kubecontext"
-
-	KubeClustersKey ContextKey = "kubeclusters"
-
+	KubeClustersKey   ContextKey = "kubeclusters"
+	AllKubeClusterKey ContextKey = "allkubeclusters"
 	// UserPrefsCtxKey is the context key for latest broker endpoint to context
 	BrokerURLCtxKey = "broker_endpoint"
 )
@@ -234,8 +247,8 @@ type Provider interface {
 	DeleteK8sContext(token, id string) (K8sContext, error)
 	GetK8sContext(token, id string) (K8sContext, error)
 	LoadAllK8sContext(token string) ([]*K8sContext, error)
-	SetCurrentContext(token, id string) (K8sContext, error)
-	GetCurrentContext(token string) (K8sContext, error)
+	// SetCurrentContext(token, id string) (K8sContext, error)
+	// GetCurrentContext(token string) (K8sContext, error)
 
 	SMPTestConfigStore(req *http.Request, perfConfig *SMP.PerformanceTestConfig) (string, error)
 	SMPTestConfigGet(req *http.Request, testUUID string) (*SMP.PerformanceTestConfig, error)
@@ -282,4 +295,6 @@ type Provider interface {
 	GetSchedules(req *http.Request, page, pageSize, order string) ([]byte, error)
 	GetSchedule(req *http.Request, scheduleID string) ([]byte, error)
 	DeleteSchedule(req *http.Request, scheduleID string) ([]byte, error)
+
+	ExtensionProxy(req *http.Request) ([]byte, error)
 }

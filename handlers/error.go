@@ -54,16 +54,16 @@ const (
 	ErrRetrieveUserTokenCode            = "2044"
 	ErrFailToSaveCode                   = "2045"
 	ErrFailToDeleteCode                 = "2046"
-	ErrWriteResponseCode                = "2052"
-	ErrTestConfigsCode                  = "2053"
-	ErrInvalidGenValueCode              = "2054"
-	ErrFailToLoadExtensionsCode         = "2047"
-	ErrConversionCode                   = "2048"
-	ErrParseDurationCode                = "2049"
-	ErrLoadTestCode                     = "2050"
-	ErrFetchKubernetesCode              = "2051"
-	ErrPanicRecoveryCode                = "2052"
-	ErrBlankNameCode                    = "2053"
+	ErrWriteResponseCode                = "2202"
+	ErrTestConfigsCode                  = "2203"
+	ErrInvalidGenValueCode              = "2204"
+	ErrFailToLoadExtensionsCode         = "2205"
+	ErrConversionCode                   = "2206"
+	ErrParseDurationCode                = "2207"
+	ErrLoadTestCode                     = "2208"
+	ErrFetchKubernetesCode              = "2209"
+	ErrPanicRecoveryCode                = "2210"
+	ErrBlankNameCode                    = "2211"
 	ErrInvalidLTURLCode                 = "2053"
 	ErrDataSendCode                     = "2137"
 	ErrVersionCompareCode               = "2138"
@@ -101,10 +101,11 @@ const (
 	ErrInvalidKubeHandlerCode           = "2175"
 	ErrInvalidKubeContextCode           = "2176"
 	ErrCreatingKubernetesComponentsCode = "2177"
+	ErrInvalidKubeCon
 )
 
 var (
-	ErrInvalidK8SConfig  = errors.New(ErrInvalidK8SConfigCode, errors.Alert, []string{"No valid kubernetes config found"}, []string{"Kubernetes config is not initialized with Meshery"}, []string{"Kubernetes config is not accessible to meshery or not valid"}, []string{"Upload your kubernetes config via the settings dashboard. If uploaded, wait for a minute for it to get initialized"})
+	ErrInvalidK8SConfig  = errors.New(ErrInvalidK8SConfigCode, errors.Alert, []string{"No valid kubernetes config found. Make sure to pass contextIDs in query parameters."}, []string{"Kubernetes config is not initialized with Meshery"}, []string{"Kubernetes config is not accessible to meshery or not valid"}, []string{"Upload your kubernetes config via the settings dashboard. If uploaded, wait for a minute for it to get initialized"})
 	ErrNilClient         = errors.New(ErrNilClientCode, errors.Alert, []string{"Kubernetes client not initialized"}, []string{"Kubernetes config is not initialized with Meshery"}, []string{"Kubernetes config is not accessible to meshery or not valid"}, []string{"Upload your kubernetes config via the settings dashboard. If uploaded, wait for a minute for it to get initialized"})
 	ErrPrometheusConfig  = errors.New(ErrPrometheusConfigCode, errors.Alert, []string{"Prometheus endpoint not configured"}, []string{"Cannot find valid Prometheus endpoint in user pref"}, []string{"Prometheus endpoint might not be reachable from meshery"}, []string{"Setup your Prometheus Endpoint via the settings dashboard"})
 	ErrGrafanaConfig     = errors.New(ErrGrafanaConfigCode, errors.Alert, []string{"Grafana endpoint not configured"}, []string{"Cannot find valid grafana endpoint in user pref"}, []string{"Grafana endpoint might not be reachable from meshery"}, []string{"Setup your Grafana Endpoint via the settings dashboard"})

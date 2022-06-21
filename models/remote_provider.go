@@ -545,78 +545,78 @@ func (l *RemoteProvider) GetK8sContext(token, id string) (K8sContext, error) {
 	return K8sContext{}, ErrFetch(fmt.Errorf("failed to get kubernetes context"), fmt.Sprint(bdr), resp.StatusCode)
 }
 
-func (l *RemoteProvider) SetCurrentContext(token, id string) (K8sContext, error) {
-	if id == "" {
-		return K8sContext{}, ErrContextID
-	}
+// func (l *RemoteProvider) SetCurrentContext(token, id string) (K8sContext, error) {
+// 	if id == "" {
+// 		return K8sContext{}, ErrContextID
+// 	}
 
-	mesheryInstanceID, _ := viper.Get("INSTANCE_ID").(*uuid.UUID)
-	ep := "/user/contexts/" + mesheryInstanceID.String()
-	logrus.Infof("attempting to set kubernetes contexts from cloud to id: %s", id)
+// 	mesheryInstanceID, _ := viper.Get("INSTANCE_ID").(*uuid.UUID)
+// 	ep := "/user/contexts/" + mesheryInstanceID.String()
+// 	logrus.Infof("attempting to set kubernetes contexts from cloud to id: %s", id)
 
-	remoteProviderURL, _ := url.Parse(fmt.Sprintf("%s%s/current/%s", l.RemoteProviderURL, ep, id))
-	logrus.Debugf("constructed kubernetes contexts url: %s", remoteProviderURL.String())
-	cReq, _ := http.NewRequest(http.MethodPost, remoteProviderURL.String(), nil)
+// 	remoteProviderURL, _ := url.Parse(fmt.Sprintf("%s%s/current/%s", l.RemoteProviderURL, ep, id))
+// 	logrus.Debugf("constructed kubernetes contexts url: %s", remoteProviderURL.String())
+// 	cReq, _ := http.NewRequest(http.MethodPost, remoteProviderURL.String(), nil)
 
-	resp, err := l.DoRequest(cReq, token)
-	if err != nil {
-		return K8sContext{}, ErrFetch(err, "Kubernetes Context", resp.StatusCode)
-	}
-	defer func() {
-		_ = resp.Body.Close()
-	}()
+// 	resp, err := l.DoRequest(cReq, token)
+// 	if err != nil {
+// 		return K8sContext{}, ErrFetch(err, "Kubernetes Context", resp.StatusCode)
+// 	}
+// 	defer func() {
+// 		_ = resp.Body.Close()
+// 	}()
 
-	if resp.StatusCode == http.StatusOK {
-		var kc K8sContext
+// 	if resp.StatusCode == http.StatusOK {
+// 		var kc K8sContext
 
-		logrus.Infof("kubernetes context successfully retrieved from remote provider")
-		return kc, nil
-	}
+// 		logrus.Infof("kubernetes context successfully retrieved from remote provider")
+// 		return kc, nil
+// 	}
 
-	bdr, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return K8sContext{}, ErrDataRead(err, "Kubernetes context")
-	}
+// 	bdr, err := ioutil.ReadAll(resp.Body)
+// 	if err != nil {
+// 		return K8sContext{}, ErrDataRead(err, "Kubernetes context")
+// 	}
 
-	logrus.Errorf("error while setting kubernetes context: %s", bdr)
-	return K8sContext{}, ErrPost(fmt.Errorf("failed to set current context"), fmt.Sprint(bdr), resp.StatusCode)
-}
+// 	logrus.Errorf("error while setting kubernetes context: %s", bdr)
+// 	return K8sContext{}, ErrPost(fmt.Errorf("failed to set current context"), fmt.Sprint(bdr), resp.StatusCode)
+// }
 
-func (l *RemoteProvider) GetCurrentContext(token string) (K8sContext, error) {
-	mesheryInstanceID, _ := viper.Get("INSTANCE_ID").(*uuid.UUID)
-	ep := "/user/contexts/" + mesheryInstanceID.String()
-	logrus.Infof("attempting to fetch current kubernetes contexts from cloud")
+// func (l *RemoteProvider) GetCurrentContext(token string) (K8sContext, error) {
+// 	mesheryInstanceID, _ := viper.Get("INSTANCE_ID").(*uuid.UUID)
+// 	ep := "/user/contexts/" + mesheryInstanceID.String()
+// 	logrus.Infof("attempting to fetch current kubernetes contexts from cloud")
 
-	remoteProviderURL, _ := url.Parse(fmt.Sprintf("%s%s/%s", l.RemoteProviderURL, ep, "current"))
-	logrus.Debugf("constructed kubernetes contexts url: %s", remoteProviderURL.String())
-	cReq, _ := http.NewRequest(http.MethodGet, remoteProviderURL.String(), nil)
+// 	remoteProviderURL, _ := url.Parse(fmt.Sprintf("%s%s/%s", l.RemoteProviderURL, ep, "current"))
+// 	logrus.Debugf("constructed kubernetes contexts url: %s", remoteProviderURL.String())
+// 	cReq, _ := http.NewRequest(http.MethodGet, remoteProviderURL.String(), nil)
 
-	resp, err := l.DoRequest(cReq, token)
-	if err != nil {
-		return K8sContext{}, ErrFetch(err, "Kubernetes Context", resp.StatusCode)
-	}
-	defer func() {
-		_ = resp.Body.Close()
-	}()
+// 	resp, err := l.DoRequest(cReq, token)
+// 	if err != nil {
+// 		return K8sContext{}, ErrFetch(err, "Kubernetes Context", resp.StatusCode)
+// 	}
+// 	defer func() {
+// 		_ = resp.Body.Close()
+// 	}()
 
-	if resp.StatusCode == http.StatusOK {
-		var kc K8sContext
-		if err := json.NewDecoder(resp.Body).Decode(&kc); err != nil {
-			return kc, ErrUnmarshal(err, "Kubernetes context")
-		}
+// 	if resp.StatusCode == http.StatusOK {
+// 		var kc K8sContext
+// 		if err := json.NewDecoder(resp.Body).Decode(&kc); err != nil {
+// 			return kc, ErrUnmarshal(err, "Kubernetes context")
+// 		}
 
-		logrus.Infof("kubernetes context successfully retrieved from remote provider")
-		return kc, nil
-	}
+// 		logrus.Infof("kubernetes context successfully retrieved from remote provider")
+// 		return kc, nil
+// 	}
 
-	bdr, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return K8sContext{}, ErrDataRead(err, "Kubernetes context")
-	}
+// 	bdr, err := ioutil.ReadAll(resp.Body)
+// 	if err != nil {
+// 		return K8sContext{}, ErrDataRead(err, "Kubernetes context")
+// 	}
 
-	logrus.Errorf("error while fetching kubernetes current context: %s", bdr)
-	return K8sContext{}, ErrFetch(fmt.Errorf("failed to retrieve kubernetes current contexts"), fmt.Sprint(bdr), resp.StatusCode)
-}
+// 	logrus.Errorf("error while fetching kubernetes current context: %s", bdr)
+// 	return K8sContext{}, ErrFetch(fmt.Errorf("failed to retrieve kubernetes current contexts"), fmt.Sprint(bdr), resp.StatusCode)
+// }
 
 // FetchResults - fetches results for profile id from provider backend
 func (l *RemoteProvider) FetchResults(tokenVal string, page, pageSize, search, order, profileID string) ([]byte, error) {
@@ -2614,6 +2614,43 @@ func (l *RemoteProvider) SMPTestConfigDelete(req *http.Request, testUUID string)
 	}
 
 	return ErrDelete(fmt.Errorf("could not delete the test profile: %d", resp.StatusCode), "Perf Test Config :"+testUUID, resp.StatusCode)
+}
+
+func (l *RemoteProvider) ExtensionProxy(req *http.Request) ([]byte, error) {
+	logrus.Infof("attempting to request remote provider")
+	p := req.URL.Path
+	split := strings.Split(p, "/api/extensions")
+	path := split[1]
+	q := req.URL.Query().Encode()
+	if len(q) > 0 {
+		path = fmt.Sprintf("%s?%s", path, q)
+	}
+	remoteProviderURL, _ := url.Parse(fmt.Sprintf("%s%s", l.RemoteProviderURL, path))
+	logrus.Debugf("constructed url: %s", remoteProviderURL.String())
+
+	cReq, _ := http.NewRequest(req.Method, remoteProviderURL.String(), req.Body)
+	tokenString, err := l.GetToken(req)
+
+	if err != nil {
+		return nil, err
+	}
+	resp, err := l.DoRequest(cReq, tokenString)
+	if err != nil {
+		return nil, err
+	}
+	defer func() {
+		_ = resp.Body.Close()
+	}()
+	bdr, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	if resp.StatusCode == http.StatusOK || resp.StatusCode == http.StatusCreated {
+		logrus.Infof("response successfully retrieved from remote provider")
+		return bdr, nil
+	}
+	return nil, ErrFetch(fmt.Errorf("failed to request to remote provider"), fmt.Sprint(bdr), resp.StatusCode)
 }
 
 // RecordMeshSyncData records the mesh sync data
