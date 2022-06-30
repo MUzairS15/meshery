@@ -59,7 +59,7 @@ require (
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.12.0
 	github.com/vektah/gqlparser/v2 v2.4.5
-	github.com/vmihailenco/taskq/v3 v3.2.7
+	github.com/vmihailenco/taskq/v3 v3.2.8
 	golang.org/x/oauth2 v0.0.0-20220411215720-9780585627b5
 	gonum.org/v1/gonum v0.11.0
 	google.golang.org/grpc v1.47.0
