@@ -6,13 +6,24 @@ import data.meshmodel_policy.get_array_pos
 import future.keywords.in
 # import data.mo
 
-binding_types := ["mount", "permission"]
+# binding_types := ["mou/nt", "permission"]
 
 evaluate[results] {
-    binding_type := binding_types[_]
+    binding_types := { type |
+        selector := data.selectors.allow.from[_].match
+    
+        selector[key]
+
+        key != "self"
+        type = key
+    }
+
+    print(binding_types, "ppp")
+    some type in binding_types
+    print(type)
     # has_key(data, binding_type)
     # results := object.keys(data[binding_type].selectors)
-    results = binding_relationship with data.selectors as data[binding_type].selectors with data.binding_comp as data[binding_type].bindingResource
+    results = binding_relationship with data.binding_comp as type
 }
 
 binding_relationship[results] {
@@ -39,22 +50,22 @@ binding_relationship[results] {
     to := extract_components(input.services, to_selectors)
 
     # binding_selectors := { data.bindingResource : [] }
-    binding_resources := extract_components(input.services, [data.binding_comp])
+    binding_resources := extract_components(input.services, [{"kind": data.binding_comp}])
 
     # print("from:", from, "\n\n", "to:", to, "\n\n", "binding_resources\n\n",  binding_resources)
-    # print("from-selectors: ", from_selectors, "to-selectors: ", to_selectors, "binding-selectors: ", data.bindingResource)
+    # print("from-selectors: ", from_selectors, "to-selectors: ", to_selectors, "binding-selectors: ", data.binding_comp)
     services_map := { service.traits.meshmap.id: service |
         service := input.services[_]
     }
 
-    print(services_map)
+    # print(services_map)
     # results = [ result |
         some i, j, k
             resource := from[i]
             # some j
                 binding_resource := binding_resources[j]
 
-            # print(resource.type, binding_resource.type, from_selectors[resource.type])
+            print(resource.type, binding_resource.type, from_selectors[resource.type])
             r := is_match(resource, binding_resource, from_selectors[resource.type])
             r == true  
             print("[[[]]]")
@@ -80,11 +91,11 @@ binding_relationship[results] {
 }
 
 is_match(resource1, resource2, from_selectors) {
-    # print("from: ", from_selectors)
+    print("from: ", from_selectors)
     # match = true
     some i
     match_from := from_selectors.match.self[i]
-    match_to := from_selectors.match["bindingResource"][i]
+    match_to := from_selectors.match[data.binding_comp][i]
     ans := is_feasible(match_from, match_to, resource1, resource2) 
 
     print("ans", ans)

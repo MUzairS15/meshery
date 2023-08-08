@@ -14,9 +14,6 @@
       },
       "metadata": {}
     },
-      "bindingResource": {
-        "kind": "PersistentVolumeClaim"
-      },
     "subType": "Mount",
     "selectors": {
       "deny": {
@@ -24,11 +21,35 @@
           {
             "kind": "Pod",
             "model": "kubernetes"
+          },
+          {
+            "kind": "ClusterRole",
+            "model": "kubernetes"
+          },
+          {
+            "kind": "Role",
+            "model": "kubernetes"
+          },
+          {
+            "kind": "ServiceAccount",
+            "model": "kubernetes"
           }
         ],
         "to": [
           {
             "kind": "Pod",
+            "model": "kubernetes"
+          },
+          {
+            "kind": "ClusterRole",
+            "model": "kubernetes"
+          },
+          {
+            "kind": "Role",
+            "model": "kubernetes"
+          },
+          {
+            "kind": "ServiceAccount",
             "model": "kubernetes"
           }
         ]
@@ -42,8 +63,60 @@
               "self": [
                 [ "settings", "spec", "volumes", "_", "persistentVolumeClaim", "claimName" ]
               ],
-              "bindingResource": [
+              "PersistentVolumeClaim": [
                 ["name"]
+              ]
+            }
+          },
+          {
+            "kind": "ClusterRole",
+            "model": "kubernetes",
+            "match": {
+              "self": [
+                [
+                  "type"
+                ],
+                [
+                  "name"
+                ]
+              ],
+              "ClusterRoleBinding": [
+                [
+                  "settings",
+                  "roleRef",
+                  "kind"
+                ],
+                [
+                  "settings",
+                  "roleRef",
+                  "name"
+                ]
+              ]
+            }
+          },
+          {
+            "kind": "Role",
+            "model": "kubernetes",
+            "match": {
+              "self": [
+                [
+                  "type"
+                ],
+                [
+                  "name"
+                ]
+              ],
+              "ClusterRoleBinding": [
+                [
+                  "settings",
+                  "roleRef",
+                  "kind"
+                ],
+                [
+                  "settings",
+                  "roleRef",
+                  "name"
+                ]
               ]
             }
           }
@@ -55,8 +128,27 @@
               "self": [
                 ["labels"]
               ],
-              "bindingResource": [
+              "PersistentVolumeClaim": [
                 ["settings", "spec", "selectors", "matchLabels"]
+              ]
+            }
+          },
+          {
+            "kind": "ServiceAccount",
+            "model": "kubernetes",
+            "match": {
+              "self": [
+                [
+                  "name"
+                ]
+              ],
+              "ClusterRoleBinding": [
+                [
+                  "settings",
+                  "subjects",
+                  "_",
+                  "name"
+                ]
               ]
             }
           }
