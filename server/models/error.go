@@ -94,6 +94,7 @@ const (
 	ErrTokenIntrospectCode                = "2254"
 	ErrShareDesignCode                    = "2255"
 	ErrUnreachableRemoteProviderCode      = "2256"
+	ErrShareFilterCode                    = "2257"
 )
 
 var (
@@ -181,7 +182,7 @@ func ErrPost(err error, obj string, statusCode int) error {
 }
 
 func ErrDelete(err error, obj string, statusCode int) error {
-	return errors.New(ErrDeleteCode, errors.Alert, []string{"Unable to delete data from the Provider", obj}, []string{"Status Code: " + fmt.Sprint(statusCode), err.Error()}, []string{}, []string{})
+	return errors.New(ErrDeleteCode, errors.Alert, []string{"Unable to de-register Meshery Server from Remote Provider", obj}, []string{"Status Code: " + fmt.Sprint(statusCode) + " ", err.Error()}, []string{"Network connectivity to Remote Provider may not be available. Session might have expired; token could be invalid."}, []string{"Verify that the Remote Provider is available. Ensure that you have an active session / valid token."})
 }
 
 func ErrDecodeBase64(err error, obj string) error {
@@ -346,6 +347,10 @@ func ErrDownloadingSeededComponents(err error, content string) error {
 
 func ErrShareDesign(err error) error {
 	return errors.New(ErrShareDesignCode, errors.Alert, []string{"cannot make design public"}, []string{err.Error()}, []string{"email address provided might not be valid", "insufficient permission"}, []string{"Ensure that you are the owner of the design you are sharing", "Try again later", "Try using an alternate email address"})
+}
+
+func ErrShareFilter(err error) error {
+	return errors.New(ErrShareFilterCode, errors.Alert, []string{"cannot make filter public"}, []string{err.Error()}, []string{"email address provided might not be valid", "insufficient permission"}, []string{"Ensure that you are the owner of the filter you are sharing", "Try again later", "Try using an alternate email address"})
 }
 
 func ErrUnreachableRemoteProvider(err error) error {

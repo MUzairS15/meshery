@@ -38,6 +38,7 @@ type K8sContext struct {
 	Version            string     `json:"version,omitempty" yaml:"version,omitempty"`
 	UpdatedAt          *time.Time `json:"updated_at,omitempty" yaml:"updated_at,omitempty"`
 	CreatedAt          *time.Time `json:"created_at,omitempty" yaml:"created_at,omitempty"`
+	ConnectionID       string     `json:"connection_id,omitempty" yaml:"connection_id,omitempty"`
 }
 
 type InternalKubeConfig struct {
@@ -144,12 +145,12 @@ func K8sContextsFromKubeconfig(kubeconfig []byte, instanceID *uuid.UUID) ([]*K8s
 
 	parsed, err := clientcmd.Load(kubeconfig)
 	if err != nil {
-		return kcs, respMessage
+		return kcs, err.Error()
 	}
 
 	kcfg := InternalKubeConfig{}
 	if err := yaml.Unmarshal(kubeconfig, &kcfg); err != nil {
-		return kcs, respMessage
+		return kcs, err.Error()
 	}
 
 	for name := range parsed.Contexts {

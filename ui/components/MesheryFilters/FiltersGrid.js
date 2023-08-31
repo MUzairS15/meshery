@@ -8,9 +8,9 @@ import ConfirmationMsg from "../ConfirmationModal";
 import { getComponentsinFile } from "../../utils/utils";
 import PublishIcon from "@material-ui/icons/Publish";
 import useStyles from "../MesheryPatterns/Grid.styles";
-import { publish_schema, publish_ui_schema } from "../schemas/publish_schema";
-import _ from "lodash";
 import Modal from "../Modal";
+import Filter from "../../public/static/img/drawer-icons/filter_svg.js";
+import PublicIcon from '@material-ui/icons/Public';
 
 const INITIAL_GRID_SIZE = { xl : 4, md : 6, xs : 12 };
 
@@ -77,9 +77,16 @@ function FilterCardGridItem({
  *  selectedFilter: {show : boolean, filter : any},
  *  pages?: number,
  *  selectedPage?: number,
- *  setPage: (page: number) => void
- *  filterErrors: Map
- *  canPublishFilter: boolean
+ *  setPage: (page: number) => void,
+ *  filterErrors: Map,
+ *  canPublishFilter: boolean,
+ *  publishModal: {
+ *   open: boolean,
+ *   filter: any,
+ *   name: string,
+ *  },
+ *  setPublishModal: (publishModal: { open: boolean, filter: any, name: string }) => void,
+ *  publishSchema: object,
  * }} props props
  */
 
@@ -90,34 +97,24 @@ function FiltersGrid({
   handleClone,
   handleDownload,
   handleSubmit,
-  urlUploadHandler,
-  uploadHandler,
   setSelectedFilter,
   selectedFilter,
   pages = 1,
   setPage,
   selectedPage,
-  UploadImport,
-  fetch,
+  importSchema,
   canPublishFilter,
   handlePublish,
   handleUnpublishModal,
+  handleImportFilter,
+  publishModal,
+  setPublishModal,
+  publishSchema
 }) {
   const classes = useStyles();
 
   const [importModal, setImportModal] = useState({
     open : false,
-  });
-
-  const [publishModal, setPublishModal] = useState({
-    open : false,
-    filter : {},
-    name : "",
-  });
-
-  const [payload, setPayload] = useState({
-    id : "",
-    catalog_data : {},
   });
 
   const handlePublishModal = (filter) => {
@@ -130,12 +127,6 @@ function FiltersGrid({
     }
   };
 
-  const onChange = (e) => {
-    setPayload({
-      id : publishModal.filter?.id,
-      catalog_data : e,
-    });
-  };
   const handlePublishModalClose = () => {
     setPublishModal({
       open : false,
@@ -256,26 +247,26 @@ function FiltersGrid({
       {canPublishFilter && (
         <Modal
           open={publishModal.open}
-          schema={publish_schema}
-          uiSchema={publish_ui_schema}
-          onChange={onChange}
-          handleClose={handlePublishModalClose}
-          formData={_.isEmpty(payload.catalog_data) ? publishModal?.filter?.catalog_data : payload.catalog_data}
-          aria-label="catalog publish"
+          schema={publishSchema.rjsfSchema}
+          uiSchema={publishSchema.uiSchema}
           title={publishModal.filter?.name}
+          handleClose={handlePublishModalClose}
           handleSubmit={handlePublish}
-          payload={payload}
           showInfoIcon={{ text : "Upon submitting your catalog item, an approval flow will be initiated.", link : "https://docs.meshery.io/concepts/catalog" }}
+          submitBtnText="Submit for Approval"
+          submitBtnIcon={<PublicIcon/>}
         />
       )}
-      <UploadImport
+      <Modal
         open={importModal.open}
+        schema={importSchema.rjsfSchema}
+        uiSchema={importSchema.uiSchema}
         handleClose={handleUploadImportClose}
-        aria-label="URL upload button"
-        handleUrlUpload={urlUploadHandler}
-        handleUpload={uploadHandler}
-        fetch={() => fetch()}
-        configuration="Filter"
+        handleSubmit={handleImportFilter}
+        title="Import Filter"
+        submitBtnText="Import"
+        leftHeaderIcon={<Filter fill="#fff" style={{ height : "24px", width : "24px", fonSize : "1.45rem" }} />}
+        submitBtnIcon={<PublishIcon/>}
       />
     </div>
   );
