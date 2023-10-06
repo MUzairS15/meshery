@@ -21,6 +21,7 @@ import (
 	"github.com/layer5io/meshery/server/router"
 	"github.com/layer5io/meshkit/broker/nats"
 	"github.com/layer5io/meshkit/logger"
+	_events "github.com/layer5io/meshkit/models/events"
 	"github.com/layer5io/meshkit/models/meshmodel/core/policies"
 	meshmodel "github.com/layer5io/meshkit/models/meshmodel/registry"
 	"github.com/layer5io/meshkit/utils/broadcast"
@@ -149,6 +150,7 @@ func main() {
 	}
 	defer preferencePersister.ClosePersister()
 
+	// eventsPersister, err := models.
 	dbHandler := models.GetNewDBInstance()
 	regManager, err := meshmodel.NewRegistryManager(dbHandler)
 	if err != nil {
@@ -174,6 +176,7 @@ func main() {
 		&models.PerformanceTestConfig{},
 		&models.SmiResultWithID{},
 		models.K8sContext{},
+		_events.Event{},
 	)
 	if err != nil {
 		log.Error(ErrDatabaseAutoMigration(err))
@@ -192,6 +195,7 @@ func main() {
 		MesheryApplicationPersister:     &models.MesheryApplicationPersister{DB: dbHandler},
 		MesheryPatternResourcePersister: &models.PatternResourcePersister{DB: dbHandler},
 		MesheryK8sContextPersister:      &models.MesheryK8sContextPersister{DB: dbHandler},
+		EventsPersister:                 &models.EventsPersister{DB: dbHandler},
 		GenericPersister:                dbHandler,
 	}
 	lProv.Initialize()
@@ -214,8 +218,10 @@ func main() {
 		PrometheusClient:         models.NewPrometheusClient(),
 		PrometheusClientForQuery: models.NewPrometheusClientWithHTTPClient(&http.Client{Timeout: time.Second}),
 
-		ConfigurationChannel: models.NewConfigurationHelper(),
-
+		ApplicationChannel:        models.NewBroadcaster(),
+		PatternChannel:            models.NewBroadcaster(),
+		FilterChannel:             models.NewBroadcaster(),
+		EventBroadcaster:          models.NewBroadcaster(),
 		DashboardK8sResourcesChan: models.NewDashboardK8sResourcesHelper(),
 		MeshModelSummaryChannel:   mesherymeshmodel.NewSummaryHelper(),
 
@@ -250,6 +256,7 @@ func main() {
 			ProviderVersion:            version,
 			SmiResultPersister:         &models.SMIResultsPersister{DB: dbHandler},
 			GenericPersister:           dbHandler,
+			EventsPersister:            &models.EventsPersister{DB: dbHandler},
 		}
 
 		cp.Initialize()

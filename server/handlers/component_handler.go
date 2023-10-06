@@ -12,7 +12,6 @@ import (
 	"github.com/layer5io/meshkit/models/meshmodel/core/types"
 	"github.com/layer5io/meshkit/models/meshmodel/core/v1alpha1"
 	"github.com/layer5io/meshkit/models/meshmodel/registry"
-	meshmodel "github.com/layer5io/meshkit/models/meshmodel/registry"
 )
 
 /**Meshmodel endpoints **/
@@ -45,7 +44,7 @@ func (h *Handler) GetMeshmodelModelsByCategories(rw http.ResponseWriter, r *http
 	if limitstr != "all" {
 		limit, _ = strconv.Atoi(limitstr)
 		if limit == 0 { //If limit is unspecified then it defaults to 25
-			limit = DefaultPageSizeForMeshModelComponents
+			limit = defaultPageSize
 		}
 	}
 	pagestr := r.URL.Query().Get("page")
@@ -210,18 +209,7 @@ func (h *Handler) GetMeshmodelModels(rw http.ResponseWriter, r *http.Request) {
 	}
 
 	meshmodels, count, _ := h.registryManager.GetModels(h.dbHandler, filter)
-	var meshmodel []v1alpha1.Model
-	for _, mod := range meshmodels {
-		filter := &v1alpha1.ComponentFilter{
-			ModelName: mod.Name,
-		}
-		entities, _, _ := h.registryManager.GetEntities(filter)
-		host := h.registryManager.GetRegistrant(entities[0])
-		mod.HostID = host.ID
-		mod.HostName = host.Hostname
-		mod.DisplayHostName = registry.HostnameToPascalCase(host.Hostname)
-		meshmodel = append(meshmodel, mod)
-	}
+
 	var pgSize int64
 	if limitstr == "all" {
 		pgSize = count
@@ -233,7 +221,7 @@ func (h *Handler) GetMeshmodelModels(rw http.ResponseWriter, r *http.Request) {
 		Page:     page,
 		PageSize: int(pgSize),
 		Count:    count,
-		Models:   models.FindDuplicateModels(meshmodel),
+		Models:   models.FindDuplicateModels(meshmodels),
 	}
 
 	if err := enc.Encode(res); err != nil {
@@ -1193,7 +1181,7 @@ func (h *Handler) GetAllMeshmodelComponents(rw http.ResponseWriter, r *http.Requ
 // request body should be of ComponentCapability format
 func (h *Handler) RegisterMeshmodelComponents(rw http.ResponseWriter, r *http.Request) {
 	dec := json.NewDecoder(r.Body)
-	var cc meshmodel.MeshModelRegistrantData
+	var cc registry.MeshModelRegistrantData
 	err := dec.Decode(&cc)
 	if err != nil {
 		http.Error(rw, err.Error(), http.StatusBadRequest)
