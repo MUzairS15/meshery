@@ -24,7 +24,7 @@ import (
 )
 
 const dumpFile = "./dump.csv"
-const COLUMNRANGE = "!A:AF3" //Update this on addition of new columns
+const COLUMNRANGE = "!A:AH3" //Update this on addition of new columns
 
 var NameToIndex = map[string]int{ //Update this on addition of new columns
 	"modelDisplayName":  0,
@@ -39,23 +39,28 @@ var NameToIndex = map[string]int{ //Update this on addition of new columns
 	"primaryColor":      9,
 	"secondaryColor":    10,
 	"styleOverrides":    11,
-	"logoURL":           12,
-	"svgColor":          13,
-	"svgWhite":          14,
-	"svgComplete":       15,
-	"genealogy":         16,
-	"About Project":     17,
-	"Page Subtitle":     18,
-	"Docs URL":          19,
-	"Standard Blurb":    20,
-	"Feature 1":         21,
-	"Feature 2":         22,
-	"Feature 3":         23,
-	"howItWorks":        24,
-	"howItWorksDetails": 25,
-	"Screenshots":       26,
-	"Full Page":         27,
-	"Publish?":          28,
+	"styles":             12,
+	"shapePolygonPoints": 13,
+	"defaultData":        14,
+	"logoURL":            15,
+	"svgColor":           16,
+	"svgWhite":           17,
+	"svgComplete":        18,
+	"genealogy":          19,
+	"isAnnotation":       20,
+	"PublishToRegistry":  21,
+	"About Project":      22,
+	"Page Subtitle":      23,
+	"Docs URL":           24,
+	"Standard Blurb":     25,
+	"Feature 1":          26,
+	"Feature 2":          27,
+	"Feature 3":          28,
+	"howItWorks":         29,
+	"howItWorksDetails":  30,
+	"Screenshots":        31,
+	"Full Page":          32,
+	"Publish?":           33,
 }
 var (
 	AhSearchEndpoint = artifacthub.AhHelmExporterEndpoint
@@ -87,7 +92,7 @@ func sortOnVerified(pkgs []artifacthub.AhPackage) (verified []artifacthub.AhPack
 }
 func main() {
 	if len(os.Args) > 1 {
-		spreadsheetID = os.Args[1]
+		spreadsheetID = "1nLLILsMpaHlWZmrtHM7jlR5GTN7X7CA-Yqq9cNE0NLc"
 	}
 	if _, err := os.Stat(OutputDirectoryPath); err != nil {
 		err := os.Mkdir(OutputDirectoryPath, 0744)
@@ -295,8 +300,8 @@ func StartPipeline(in chan []artifacthub.AhPackage, csv chan string, spreadsheet
 					continue
 				}
 				ahPkgs = append(ahPkgs, ap)
+				pkgsChan <- ahPkgs
 			}
-			pkgsChan <- ahPkgs
 		}
 		close(pkgsChan)
 	}()
@@ -381,7 +386,6 @@ func StartPipeline(in chan []artifacthub.AhPackage, csv chan string, spreadsheet
 				helmURL: ap.ChartUrl,
 			}
 		}
-
 	}
 	return nil
 }
@@ -521,7 +525,7 @@ func Spreadsheet(srv *sheets.Service, sheetName string, spreadsheet chan struct 
 	helmURL string
 }, am map[string][]interface{}, acpm map[string]map[string]bool) {
 	start := time.Now()
-	rangeString := sheetName + "!A4:AB4"
+	rangeString := sheetName + "!A4:U4"
 	// Get the value of the specified cell.
 	resp, err := srv.Spreadsheets.Values.Get(spreadsheetID, rangeString).Do()
 	if err != nil {
