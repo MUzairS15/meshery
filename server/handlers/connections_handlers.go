@@ -62,16 +62,19 @@ func (h *Handler) ProcessConnectionRegistration(w http.ResponseWriter, req *http
 				event := eventBuilder.WithSeverity(events.Error).WithDescription("Unable to perisit the \"%s\" connection details").WithMetadata(map[string]interface{}{
 					"error": err,
 				}).Build()
+				http.Error(w, err.Error(), http.StatusInternalServerError)
 				_ = provider.PersistEvent(event)
 				go h.config.EventBroadcaster.Publish(userUUID, event)
+				return
 			}
 		}
-		fmt.Println("test instance: ", inst)
 		event, err := inst.SendEvent(req.Context(), helpers.StatusToEvent(connectionRegisterPayload.Status), connectionRegisterPayload)
 		if err != nil {
 			h.log.Error(err)
 			_ = provider.PersistEvent(event)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 			go h.config.EventBroadcaster.Publish(userUUID, event)
+			return
 		}
 	}
 }
@@ -86,7 +89,7 @@ func (h *Handler) handleProcessTermination(w http.ResponseWriter, req *http.Requ
 		return
 	}
 	smInstancetracker := h.ConnectionToStateMachineInstanceTracker
-	
+
 	smInstancetracker.mx.Lock()
 	defer smInstancetracker.mx.Unlock()
 	id, ok := body["id"]
