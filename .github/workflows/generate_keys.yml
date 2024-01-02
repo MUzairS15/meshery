@@ -23,7 +23,7 @@ jobs:
     - name: Dump keys from the spreadsheet
       run: |
         curl -L ${{ env.spreadsheet_uri }} >> "keys.csv";
-        [ ! -d "$dldir" ] && mkdir -p "$dldir";
+        [ ! -d "./permissions" ] && mkdir -p "./permissions";
       
     - name: Check out code
       uses: actions/checkout@v4
