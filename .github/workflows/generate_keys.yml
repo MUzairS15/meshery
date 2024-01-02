@@ -15,10 +15,11 @@ jobs:
     steps:
     - name: Set spreadsheet_uri as environment variable
       run: |
-       if [[ ${{ inputs.spreadshet_uri != '' }} ]];
-       then echo "spreadsheet_uri=${{ inputs.spreadshet_uri }}" >> $GITHUB_ENV
-       else
-       echo "spreadsheet_uri=https://docs.google.com/spreadsheets/d/e/2PACX-1vT66uDq7Fan9GIjba7qS8jwpr7hu69P_iF4RR52hD-yVVtm2Pybbi67iq9tfYWwO4KtBPb7OiP4ImQn/pub?gid=829069645&single=true&output=csv" >> $GITHUB_ENV
+        if [[ ${{ inputs.spreadshet_uri != '' }} ]]; then 
+          echo "spreadsheet_uri=${{ inputs.spreadshet_uri }}" >> $GITHUB_ENV
+        else
+          echo "spreadsheet_uri=https://docs.google.com/spreadsheets/d/e/2PACX-1vT66uDq7Fan9GIjba7qS8jwpr7hu69P_iF4RR52hD-yVVtm2Pybbi67iq9tfYWwO4KtBPb7OiP4ImQn/pub?gid=829069645&single=true&output=csv" >> $GITHUB_ENV
+        fi
     - name: Dump keys from the spreadsheet
       run: |
         curl -L ${{ env.spreadsheet_uri }} >> "keys.csv"
