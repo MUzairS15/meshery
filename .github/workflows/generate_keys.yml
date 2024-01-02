@@ -1,0 +1,34 @@
+name: Generate Keys
+on: 
+  workflow_dispatch:
+    inputs:
+      spreadsheet_uri:
+        description: Link of the spreadsheet containing keys.
+        type: string
+  schedule:
+    - cron: "0 0 * * *"
+jobs:
+  fetch-keys:
+    name: Fetch Keys
+    if: github.repository == 'meshery/meshery'
+    runs-on: ubuntu-22.04
+    steps:
+    - name: Set spreadsheet_uri as environment variable
+      run: |
+       if [[ ${{ inputs.spreadshet_uri != "" }} ]];
+       then echo "spreadsheet_uri=${{ inputs.spreadshet_uri }}" >> $GITHUB_ENV
+       else
+       echo "spreadsheet_uri=https://docs.google.com/spreadsheets/d/e/2PACX-1vT66uDq7Fan9GIjba7qS8jwpr7hu69P_iF4RR52hD-yVVtm2Pybbi67iq9tfYWwO4KtBPb7OiP4ImQn/pub?gid=829069645&single=true&output=csv" >> $GITHUB_ENV
+    - name: Dump keys from the spreadsheet
+      run: |
+        curl -L ${{ env.spreadsheet_uri }} >> "keys.csv"
+    - name: Commit changes
+      uses: stefanzweifel/git-auto-commit-action@v5
+      with:
+        commit_message: Added permissions keys.
+        branch: master
+        commit_options: '--signoff'
+        repository: .
+        commit_user_name: l5io
+        commit_user_email: ci@layer5.io
+        commit_author: ${{ github.actor }} <${{ github.actor }}@users.noreply.github.com>author of the commit that triggered the run
