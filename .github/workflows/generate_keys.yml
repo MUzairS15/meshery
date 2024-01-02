@@ -22,14 +22,15 @@ jobs:
         fi
     - name: Dump keys from the spreadsheet
       run: |
-        curl -L ${{ env.spreadsheet_uri }} >> "keys.csv";
-        [ ! -d "./permissions" ] && mkdir -p "./permissions";
-      
+        curl -L ${{ env.spreadsheet_uri }} >> "keys.csv";      
     - name: Check out code
       uses: actions/checkout@v4
       with:
         token: ${{ secrets.GH_ACCESS_TOKEN }}
         fetch-depth: 1
+    - name: Create permissions folder
+      run: |
+          [ ! -d "./permissions" ] && mkdir -p "./permissions"
     - name: Commit changes
       uses: stefanzweifel/git-auto-commit-action@v5
       with:
