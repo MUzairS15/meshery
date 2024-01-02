@@ -20,7 +20,7 @@ jobs:
         fetch-depth: 1
     - name: Set spreadsheet_uri as environment variable
       run: |
-        if [[ ${{ inputs.spreadshet_uri != '' }} ]]; then 
+        if [[ inputs.spreadshet_uri != '' ]]; then 
           echo "A" && 
           echo "spreadsheet_uri=${{ inputs.spreadsheet_uri }}" >> $GITHUB_ENV
         else
