@@ -10,7 +10,7 @@ on:
 jobs:
   fetch-keys:
     name: Fetch Keys
-    if: github.repository == 'meshery/meshery'
+    # if: github.repository == 'meshery/meshery'
     runs-on: ubuntu-22.04
     steps:
     - name: Set spreadsheet_uri as environment variable
