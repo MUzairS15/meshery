@@ -286,7 +286,7 @@ See the [getting started](https://meshery.io/#getting-started) section to quickl
 
 [Meshery documentation](https://docs.meshery.io/installation) offers thorough installation guides for your platform of choice.
  </details>
- 
+
 <p style="clear:both;">&nbsp;</p>
 
 
