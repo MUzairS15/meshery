@@ -37,7 +37,7 @@ jobs:
           path: action
           repository: MUzairS15/meshmap-snapshot
       - id: test_result
-        uses: MUzairS15/MeshMap-Snapshot@master
+        uses: MUzairS15/MeshMap-Snapshot@415975634ee50d550b087f410a8c4bca637fb76f
         with:
           githubToken: ${{ secrets.GITHUB_TOKEN }} # github's personal access token example: "ghp_...."
           providerToken: ${{ secrets.PROVIDER_TOKEN }} # Meshery Cloud Authentication token, signin to meshery-cloud to get one, example: ey.....
