@@ -223,7 +223,6 @@ Assess your cloud native infrastructure configuration against deployment and ope
 <h2>Performance Management</h2>
 
 <h3>Adhering to Cloud Native Standards</h3>
-
 <picture align="left">
   <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/layer5io/layer5/master/src/assets/images/service-mesh-performance/stacked/smp-light-text.svg"  width="18%" align="left" style="margin-left:10px;" />
   <img alt="Shows an illustrated light mode meshery logo in light color mode and a dark mode meshery logo dark color mode." src="https://raw.githubusercontent.com/layer5io/layer5/master/src/assets/images/service-mesh-performance/stacked/smp-light-text.svg" width="18%" align="left" style="margin-left:10px;" />
