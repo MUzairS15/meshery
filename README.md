@@ -289,7 +289,6 @@ See the [getting started](https://meshery.io/#getting-started) section to quickl
  
 <p style="clear:both;">&nbsp;</p>
 
-
 <div>&nbsp;</div>
 
 ## Join the Meshery community!
