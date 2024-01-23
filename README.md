@@ -353,7 +353,6 @@ Please do! We're a warm and welcoming community of open source contributors. Ple
 <a href="../../stargazers">
  <img align="center" src="https://api.star-history.com/svg?repos=meshery/meshery&type=Date" />
 </a></p>
-
 ### License
 
 This repository and site are available as open-source under the terms of the [Apache 2.0 License](https://opensource.org/licenses/Apache-2.0).
