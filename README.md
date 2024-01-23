@@ -250,7 +250,6 @@ You may deploy Meshery internal to your cluster or external to your cluster.
 
 <p align="center"><a href="https://raw.githubusercontent.com/meshery/meshery/master/docs/assets/img/architecture/Meshery-client-architecture.svg"><img src="https://docs.meshery.io/assets/img/readme/Meshery-client-architecture.svg" width="90%" align="center" /></a></p>
 Learn more about <a href="https://docs.meshery.io/architecture">Meshery's architecture</a>.
-
 <h2><a name="running"></a>Get Started with Meshery</h2>
 <p style="clear:both;"></p>
 <!-- <img alt="Control Kubernetes and your workloads with mesheryctl" src=".github/assets/images/readme/mesheryctl.png"  style="margin-left:10px; margin-bottom:10px;" width="50%" align="right" /> -->
