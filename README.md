@@ -338,7 +338,6 @@ Find out more on the <a href="https://layer5.io/community#meshmate">Layer5 commu
 <br /><br />
 
 <div>&nbsp;</div>
-
 ## Contributing
 
 Please do! We're a warm and welcoming community of open source contributors. Please join. All types of contributions are welcome. Be sure to read the [Contributor Guides](https://docs.meshery.io/project/contributing) for a tour of resources available to you and how to get started.
