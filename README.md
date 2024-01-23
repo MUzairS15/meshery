@@ -302,7 +302,6 @@ Our projects are community-built and welcome collaboration. 👍 Be sure to see 
 <h3>Find your MeshMate</h3>
 
 <p>MeshMates are experienced Layer5 community members, who will help you learn your way around, discover live projects, and expand your community network. Connect with a Meshmate today!</p>
-
 Find out more on the <a href="https://layer5.io/community#meshmate">Layer5 community</a>. <br />
 
 </p>
