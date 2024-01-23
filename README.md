@@ -192,7 +192,6 @@ Using a GitOps-centric approach, visually and collaboratively design and manage 
 </div>
 </details>
 <p style="clear:both;">&nbsp;</p> -->
-
 Assess your cloud native infrastructure configuration against deployment and operational best practices with Meshery's configuration validator. Manage your workloads with confidence. Check your Kubernetes configuration for anti-patterns and avoid common pitfalls.
 
 <a href="https://docs.meshery.io/assets/img/readme/meshery_lifecycle_management.png"><img alt="Layer5 Service Mesh Configuration Management" src="https://docs.meshery.io/assets/img/readme/meshery_lifecycle_management.png"  style="margin-right:10px;margin-bottom:10px;" width="100%" align="center"/></a>
