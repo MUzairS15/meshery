@@ -92,7 +92,6 @@ Using a GitOps-centric approach, visually and collaboratively design and manage 
  
 <h2>Multi-Cluster Kubernetes and Cloud Native Configuration Management</h2>
 <p>Meshery supports <a href="https://meshery.io/integrations">220+ cloud native integrations</a>.</p>
-
 <!-- 
 <h3><a name="iac"></a>Supported Cloud Native Infrastructure and Applications</h3>
 
