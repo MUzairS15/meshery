@@ -77,7 +77,6 @@ A self-service engineering platform, <a href="https://meshery.io">Meshery</a>, i
 <p style="clear:both;">&nbsp;</p>
 
 # Functionality<a name="functionality"></a>
-
 <p style="clear:both;">
 <h2>Cloud Native Lifecycle Management</h2>
 Meshery manages the provisioning, configuration and operation of your Kubernetes clusters while supporting hundreds of different types of cloud native infrastructure integrations. Meshery also offers a <a href="https://meshery.io/catalog">catalog of curated design templates</a> filled with configuration best practices.
