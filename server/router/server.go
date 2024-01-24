@@ -10,7 +10,6 @@ import (
 	"github.com/layer5io/meshery/server/handlers"
 	"github.com/layer5io/meshery/server/models"
 )
-
 // Router represents Meshery router
 type Router struct {
 	S    *mux.Router
