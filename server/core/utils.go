@@ -10,7 +10,6 @@ import (
 
 	"github.com/pkg/errors"
 )
-
 var (
 	// ManifestsFolder is where the Kubernetes manifests are stored
 	ManifestsFolder = "manifests"
