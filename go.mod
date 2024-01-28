@@ -6,6 +6,7 @@ replace (
 	github.com/docker/cli => github.com/docker/cli v23.0.6+incompatible
 	github.com/docker/docker => github.com/docker/docker v23.0.6+incompatible
 	github.com/kubernetes/kompose => github.com/meshery/kompose v1.26.2-0.20230425025309-3bb778d54007
+	github.com/layer5io/meshkit => github.com/MUzairS15/meshkit v0.5.28-0.20240128100046-7df749340475
 	k8s.io/client-go => k8s.io/client-go v0.28.3
 	k8s.io/kubectl => k8s.io/kubectl v0.28.3
 	oras.land/oras-go v1.2.4 => oras.land/oras-go v1.2.3
@@ -61,8 +62,10 @@ require (
 	github.com/vektah/gqlparser/v2 v2.5.10
 	github.com/vmihailenco/taskq/v3 v3.2.9
 	golang.org/x/oauth2 v0.15.0
+	golang.org/x/sync v0.5.0
 	golang.org/x/text v0.14.0
 	gonum.org/v1/gonum v0.14.0
+	google.golang.org/api v0.152.0
 	google.golang.org/grpc v1.60.1
 	google.golang.org/protobuf v1.31.0
 	gopkg.in/yaml.v2 v2.4.0
@@ -298,12 +301,10 @@ require (
 	golang.org/x/exp v0.0.0-20231006140011-7918f672742d // indirect
 	golang.org/x/mod v0.14.0 // indirect
 	golang.org/x/net v0.19.0 // indirect
-	golang.org/x/sync v0.5.0 // indirect
 	golang.org/x/sys v0.15.0 // indirect
 	golang.org/x/term v0.15.0 // indirect
 	golang.org/x/time v0.5.0 // indirect
 	golang.org/x/tools v0.16.0 // indirect
-	google.golang.org/api v0.152.0 // indirect
 	google.golang.org/appengine v1.6.8 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20231120223509-83a465c0220f // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect

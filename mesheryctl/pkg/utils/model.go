@@ -7,12 +7,14 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/layer5io/meshkit/models/meshmodel/core/v1alpha1"
 	"github.com/layer5io/meshkit/utils"
 	"github.com/layer5io/meshkit/utils/csv"
 )
 
 var (
-	shouldRegisterMod = "publishToSites"
+	shouldRegisterMod        = "publishToSites"
+	shouldRegisterToRegsitry = "publishToRegistry"
 )
 
 type ModelCSV struct {
@@ -53,6 +55,25 @@ type ModelCSV struct {
 	PublishToSites     string `json:"publishToSites"`
 }
 
+func (mcv *ModelCSV) CreateModelDefinition(version string) v1alpha1.Model {
+	model := v1alpha1.Model{
+		Name:        mcv.Model,
+		Version:     version,
+		DisplayName: mcv.ModelDisplayName,
+		Metadata: map[string]interface{}{
+			"isAnnotation": mcv.IsAnnotation,
+			"svgColor":     mcv.SVGColor,
+			"svgWhite":     mcv.SVGWhite,
+			"svgComplete":  mcv.SVGComplete,
+			"subCategory":  mcv.SubCategory, // move as first class attribute
+		},
+		Category: v1alpha1.Category{
+			Name: mcv.Category,
+		},
+	}
+	return model
+}
+
 type ModelCSVHelper struct {
 	SpreadsheetID  int64
 	SpreadsheetURL string
@@ -79,11 +100,17 @@ func NewModelCSVHelper(sheetURL, spreadsheetName string, spreadsheetID int64) (*
 	}, nil
 }
 
-func (mch *ModelCSVHelper) ParseModelsSheet() error {
+func (mch *ModelCSVHelper) ParseModelsSheet(parseForDocs bool) error {
 	ch := make(chan ModelCSV, 1)
 	errorChan := make(chan error, 1)
 	csvReader, err := csv.NewCSVParser[ModelCSV](mch.CSVPath, rowIndex, nil, func(columns []string, currentRow []string) bool {
-		index := GetIndexForRegisterCol(columns, shouldRegisterMod)
+		index := 0
+
+		if parseForDocs {
+			index = GetIndexForRegisterCol(columns, shouldRegisterMod)
+		} else {
+			index = GetIndexForRegisterCol(columns, shouldRegisterToRegsitry)
+		}
 		if index != -1 && index < len(currentRow) {
 			shouldRegister := currentRow[index]
 			return strings.ToLower(shouldRegister) == "true"
