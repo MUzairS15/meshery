@@ -1,7 +1,7 @@
 {
   "id": "00000000-0000-0000-0000-000000000000",
   "name": "admin-console-operator",
-  "version": "",
+  "version": "2.15.0-SNAPSHOT.3",
   "displayName": "Epam Delivery Platform (EDP) Admin Console",
   "hostID": "00000000-0000-0000-0000-000000000000",
   "category": {

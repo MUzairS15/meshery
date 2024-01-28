@@ -1,7 +1,7 @@
 {
   "id": "00000000-0000-0000-0000-000000000000",
   "name": "aks-appgw-fe",
-  "version": "",
+  "version": "1.0.0-rc1",
   "displayName": "Azure Application Gateway ",
   "hostID": "00000000-0000-0000-0000-000000000000",
   "category": {
