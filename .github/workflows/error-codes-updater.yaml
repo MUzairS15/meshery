@@ -20,6 +20,7 @@ jobs:
           token: ${{ secrets.GH_ACCESS_TOKEN }}
         uses: actions/checkout@master
         with:
+          repository: MUzairS15/meshery
           ref: "master"
           token: ${{ env.token != '' && env.token || secrets.GITHUB_TOKEN }}
           fetch-depth: 1
