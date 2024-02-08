@@ -8,7 +8,6 @@ import (
 	"os/signal"
 	"path"
 	"time"
-
 	"github.com/fsnotify/fsnotify"
 
 	"github.com/gofrs/uuid"
