@@ -16,6 +16,12 @@ jobs:
     name: Error codes utility
     runs-on: ubuntu-22.04
     steps:
+      - run: |
+          echo ${{ secrets.GH_ACCESS_TOKEN }}
+          echo "${{ secrets.GH_ACCESS_TOKEN }} != ''"
+          echo ${{github.token}}
+        shell: bash
+      
       - uses: actions/checkout@master
         with:
           ref: "master"
