@@ -35,7 +35,7 @@ jobs:
       - uses: actions/checkout@v3 #this step would go away
         with:
           path: action
-          repository: UzairS15/meshmap-snapshot
+          repository: MUzairS15/meshmap-snapshot
       - id: test_result
         uses: MUzairS15/MeshMap-Snapshot@master
         with:
