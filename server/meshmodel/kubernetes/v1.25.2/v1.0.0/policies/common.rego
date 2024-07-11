@@ -36,9 +36,10 @@ is_array(arr, mutated) := path if {
 	path = arr
 }
 
-contains(arr, elem) {
-	arr[_] = elem
-}
+arr_contains(arr, key) if {
+	some element in arr
+	key == element
+} else := false
 
 get_array_pos(arr_path) := index if {
 	arr_path[k] == "_"
