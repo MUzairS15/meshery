@@ -2,9 +2,9 @@ package meshmodel_policy
 
 import rego.v1
 
-import data.common.contains
+import data.common.arr_contains
 import data.common.extract_components
-import data.common.get_array_pos
+import data.common.array_path_position
 
 edge_binding_relationship contains results if {
 	relationship := data.relationships[_]
@@ -111,7 +111,7 @@ is_related(resource1, resource2, from_selectors) if {
 
 # If none of the match paths ("from" and "to") doesn't contain array field in between, then it is a normal lookup.
 is_feasible(from, to, resource1, resource2) if {
-	not contains(to, "_")
+	not arr_contains(to, "_")
 	object.get(resource1, from, "") == object.get(resource2, to, "")
 }
 
@@ -126,8 +126,8 @@ is_feasible(from, to, resource1, resource2) if {
 }
 
 match(from, to, resource1, resource2) if {
-	contains(to, "_")
-	index := get_array_pos(to)
+	arr_contains(to, "_")
+	index := array_path_position(to)
 	prefix_path := array.slice(to, 0, index)
 	suffix_path := array.slice(to, index + 1, count(to))
 

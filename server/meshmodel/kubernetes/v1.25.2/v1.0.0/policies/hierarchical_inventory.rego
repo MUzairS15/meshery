@@ -2,10 +2,9 @@ package meshmodel_policy
 
 import rego.v1
 
-import data.common.contains
 import data.common.extract_components
-import data.common.get_array_pos
-import data.common.get_path
+import data.common.array_path_position
+import data.common.resolve_path
 import data.common.has_key
 import data.common.is_relationship_feasible
 import data.path_builder.ensureParentPathsExist
@@ -60,10 +59,10 @@ apply_patch(mutator, mutated, from_selectors, to_selectors) := mutated_design if
 
 	patches := [patch |
 		some i
-		mutator_path := get_path(mutatorObj.path[i], mutatorObj.mutator)
+		mutator_path := resolve_path(mutatorObj.path[i], mutatorObj.mutator)
 		update_value := object.get(mutatorObj.mutator, mutatorObj.path[i], "")
 		update_value != null
-		mutated_path := get_path(mutatedObj.path[i], mutatedObj.mutated)
+		mutated_path := resolve_path(mutatedObj.path[i], mutatedObj.mutated)
 
 		patch := {
 			"op": "add",
