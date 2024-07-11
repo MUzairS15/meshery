@@ -1,19 +1,19 @@
 package meshmodel_policy
 
+import rego.v1
+
 import data.common.contains
-import data.common.is_relationship_feasible
-import data.common.has_key
 import data.common.extract_components
 import data.common.get_array_pos
 import data.common.get_path
+import data.common.has_key
+import data.common.is_relationship_feasible
 import data.path_builder.ensureParentPathsExist
-import future.keywords.every
-import future.keywords.in
 
-hierarchical_inventory_relationship[updated_comps] {
+hierarchical_inventory_relationship contains updated_comps if {
 	relationship := data.relationships[_]
 	relationship.subType in {"Inventory", "Parent"}
-		
+
 	selector_set := relationship.selectors[_]
 	from_selectors := {kind: selectors |
 		selectors := selector_set.allow.from[_]
@@ -39,6 +39,7 @@ hierarchical_inventory_relationship[updated_comps] {
 
 		allowed_component.traits.meshmap["meshmodel-metadata"].parentId == i
 		updated_comp := apply_patch(allowed_component, service, from_selectors, to_selectors)
+
 		# The id is the combination of the <id of the node from which the config was patched>_<id of the node from which the config was patched>
 		# eg: <configmap node id>_<deployment_node_id>
 		# The client interceptor should rely on the id present in the traits only and hsould not bother to parse the above id, the above id is included to provided more context.
@@ -46,20 +47,19 @@ hierarchical_inventory_relationship[updated_comps] {
 	}
 }
 
-apply_patch(mutator, mutated, from_selectors, to_selectors) := mutated_design {
+apply_patch(mutator, mutated, from_selectors, to_selectors) := mutated_design if {
 	some i, j
 
 	is_relationship_feasible(from_selectors[i], mutator.type)
-	
+
 	is_relationship_feasible(to_selectors[j], mutated.type)
 
 	mutatorObj := identifyMutator(from_selectors[i], to_selectors[j], mutator, mutated)
-	
+
 	mutatedObj := identifyMutated(from_selectors[i], to_selectors[j], mutator, mutated)
 
-
 	patches := [patch |
-	some i
+		some i
 		mutator_path := get_path(mutatorObj.path[i], mutatorObj.mutator)
 		update_value := object.get(mutatorObj.mutator, mutatorObj.path[i], "")
 		update_value != null
@@ -75,38 +75,34 @@ apply_patch(mutator, mutated, from_selectors, to_selectors) := mutated_design {
 	mutated_design = json.patch(mutatedObj.mutated, resultantPatchesToApply)
 }
 
-identifyMutator(from_selector, to_selector, mutator, mutated) := mutatorObj {
+identifyMutator(from_selector, to_selector, mutator, mutated) := mutatorObj if {
 	has_key(to_selector.patch, "mutatorRef")
 	mutatorObj = {
 		"mutator": mutated,
-		"path": to_selector.patch.mutatorRef
+		"path": to_selector.patch.mutatorRef,
 	}
-
 }
 
-identifyMutator(from_selector, to_selector, mutator, mutated) := mutatorObj {
+identifyMutator(from_selector, to_selector, mutator, mutated) := mutatorObj if {
 	has_key(from_selector.patch, "mutatorRef")
 	mutatorObj = {
 		"mutator": mutator,
-		"path": from_selector.patch.mutatorRef
+		"path": from_selector.patch.mutatorRef,
 	}
-
 }
 
-identifyMutated(from_selector, to_selector, mutator, mutated) := mutatedObj {
+identifyMutated(from_selector, to_selector, mutator, mutated) := mutatedObj if {
 	has_key(from_selector.patch, "mutatedRef")
 	mutatedObj = {
 		"mutated": mutator,
-		"path": from_selector.patch.mutatedRef
+		"path": from_selector.patch.mutatedRef,
 	}
-
 }
 
-identifyMutated(from_selector, to_selector, mutator, mutated) := mutatedObj {
+identifyMutated(from_selector, to_selector, mutator, mutated) := mutatedObj if {
 	has_key(to_selector.patch, "mutatedRef")
 	mutatedObj = {
 		"mutated": mutated,
-		"path": to_selector.patch.mutatedRef
+		"path": to_selector.patch.mutatedRef,
 	}
-
 }
