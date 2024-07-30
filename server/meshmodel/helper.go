@@ -14,13 +14,16 @@ import (
 	"github.com/layer5io/meshery/server/models/meshmodel/core"
 	"github.com/layer5io/meshkit/logger"
 	"github.com/layer5io/meshkit/models/meshmodel/core/v1alpha2"
-	"github.com/layer5io/meshkit/models/meshmodel/core/v1beta1"
+	model "github.com/layer5io/meshkit/models/meshmodel/core/v1beta1"
+
+	"github.com/meshery/schemas/models/v1beta1"
+
 	meshmodel "github.com/layer5io/meshkit/models/meshmodel/registry"
 	mutils "github.com/layer5io/meshkit/utils"
 	"github.com/pkg/errors"
 )
 
-var ArtifactHubComponentsHandler = v1beta1.ArtifactHub{} //The components generated in output directory will be handled by kubernetes
+var ArtifactHubComponentsHandler = model.ArtifactHub{} //The components generated in output directory will be handled by kubernetes
 var ModelsPath = "../meshmodel"
 var RelativeRelationshipsPath = "relationships"
 
@@ -136,11 +139,13 @@ func (erh *EntityRegistrationHelper) generateComponents(pathToComponents string)
 			}
 
 			// Only register components that have been marked as published
-			if comp.Metadata != nil && comp.Metadata["status"] == "enabled" {
-				// Generate SVGs for the component and save them on the file system
-				utils.WriteSVGsOnFileSystem(&comp)
-				erh.componentChan <- comp
-			}
+
+			// && comp.Status == "enabled" add this condition
+
+			// Generate SVGs for the component and save them on the file system
+			utils.WriteSVGsOnFileSystem(&comp)
+			erh.componentChan <- comp
+
 		}
 		return nil
 	})
@@ -191,25 +196,28 @@ func (erh *EntityRegistrationHelper) watchComponents(ctx context.Context) {
 	for {
 		select {
 		case comp := <-erh.componentChan:
-			isRegistrantError, isModelError, err = erh.regManager.RegisterEntity(v1beta1.Host{
-				Hostname: comp.Model.Registrant.Hostname,
+			connectionKind := comp.Model.Registrant.Kind
+
+			isRegistrantError, isModelError, err = erh.regManager.RegisterEntity(v1beta1.Connection{
+				Kind: connectionKind,
 			}, &comp)
 			if err != nil {
 				err = core.ErrRegisterEntity(err, string(comp.Type()), comp.DisplayName)
 			}
-			helpers.HandleError(v1beta1.Host{
-				Hostname: comp.Model.Registrant.Hostname,
+			helpers.HandleError(v1beta1.Connection{
+				Kind: connectionKind,
 			}, &comp, err, isModelError, isRegistrantError)
-		case rel := <-erh.relationshipChan:
-			isRegistrantError, isModelError, err = erh.regManager.RegisterEntity(v1beta1.Host{
-				Hostname: rel.Model.Registrant.Hostname,
-			}, &rel)
-			helpers.HandleError(v1beta1.Host{
-				Hostname: rel.Model.Registrant.Hostname,
-			}, &rel, err, isModelError, isRegistrantError)
-			if err != nil {
-				err = core.ErrRegisterEntity(err, string(rel.Type()), rel.Kind)
-			}
+		// case rel := <-erh.relationshipChan:
+		// 	connectionKind := rel.Model.Connection.Kind
+		// 	isRegistrantError, isModelError, err = erh.regManager.RegisterEntity(v1beta1.Host{
+		// 		connectionKind: connectionKind,
+		// 	}, &rel)
+		// 	helpers.HandleError(v1beta1.Host{
+		// 		connectionKind: connectionKind,
+		// 	}, &rel, err, isModelError, isRegistrantError)
+		// 	if err != nil {
+		// 		err = core.ErrRegisterEntity(err, string(rel.Type()), rel.Kind)
+		// 	}
 
 		//Watching and logging errors from error channel
 		case mhErr := <-erh.errorChan:
