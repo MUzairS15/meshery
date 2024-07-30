@@ -273,10 +273,12 @@ func main() {
 	go func() {
 		ch.SeedComponents()
 		r, err := policies.NewRegoInstance(PoliciesPath, regManager)
-		rego = *r
 		if err != nil {
 			log.Warn(ErrCreatingOPAInstance)
+		} else {
+			rego = *r
 		}
+		
 		krh.SeedKeys(viper.GetString("KEYS_PATH"))
 		hc.MeshModelSummaryChannel.Publish()
 	}()

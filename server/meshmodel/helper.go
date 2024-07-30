@@ -14,23 +14,24 @@ import (
 	"github.com/layer5io/meshery/server/models/meshmodel/core"
 	"github.com/layer5io/meshkit/logger"
 	"github.com/layer5io/meshkit/models/meshmodel/core/v1alpha2"
-	model "github.com/layer5io/meshkit/models/meshmodel/core/v1beta1"
+	_models "github.com/layer5io/meshkit/models/meshmodel/core/v1beta1"
 
-	"github.com/meshery/schemas/models/v1beta1"
+	"github.com/meshery/schemas/models/v1beta1/model"
+		"github.com/meshery/schemas/models/v1beta1/connection"
 
 	meshmodel "github.com/layer5io/meshkit/models/meshmodel/registry"
 	mutils "github.com/layer5io/meshkit/utils"
 	"github.com/pkg/errors"
 )
 
-var ArtifactHubComponentsHandler = model.ArtifactHub{} //The components generated in output directory will be handled by kubernetes
+var ArtifactHubComponentsHandler = _models.ArtifactHub{} //The components generated in output directory will be handled by kubernetes
 var ModelsPath = "../meshmodel"
 var RelativeRelationshipsPath = "relationships"
 
 type EntityRegistrationHelper struct {
 	handlerConfig    *models.HandlerConfig
 	regManager       *meshmodel.RegistryManager
-	componentChan    chan v1beta1.ComponentDefinition
+	componentChan    chan model.ComponentDefinition
 	relationshipChan chan v1alpha2.RelationshipDefinition
 	errorChan        chan error
 	log              logger.Handler
@@ -40,7 +41,7 @@ func NewEntityRegistrationHelper(hc *models.HandlerConfig, rm *meshmodel.Registr
 	return &EntityRegistrationHelper{
 		handlerConfig:    hc,
 		regManager:       rm,
-		componentChan:    make(chan v1beta1.ComponentDefinition),
+		componentChan:    make(chan model.ComponentDefinition),
 		relationshipChan: make(chan v1alpha2.RelationshipDefinition),
 		errorChan:        make(chan error),
 		log:              log,
@@ -67,6 +68,10 @@ func (erh *EntityRegistrationHelper) SeedComponents() {
 	// Read component and relationship definitions from files and send them to respective channels
 
 	for _, model := range models {
+		// fmt.Println("model: ", model.Name())
+		if model.Name() != "kubernetes" {
+			continue
+		}
 		modelVersionsDirPath := filepath.Join(ModelsPath, model.Name())
 		// contains all versions for the model
 		modelVersionsDir, err := os.ReadDir(modelVersionsDirPath)
@@ -74,6 +79,8 @@ func (erh *EntityRegistrationHelper) SeedComponents() {
 			erh.errorChan <- mutils.ErrReadDir(errors.Wrapf(err, "error while reading directory for registering components"), modelVersionsDirPath)
 			continue
 		}
+
+		fmt.Println("REACHED 83 ")
 
 		for _, version := range modelVersionsDir {
 			modelDefVersionsDirPath := filepath.Join(modelVersionsDirPath, version.Name())
@@ -83,6 +90,7 @@ func (erh *EntityRegistrationHelper) SeedComponents() {
 			if err != nil {
 				erh.errorChan <- mutils.ErrReadDir(errors.Wrapf(err, "error while reading directory for registering components"), modelVersionsDirPath)
 			}
+			fmt.Println("REACHED 93 ")
 			for _, defVersion := range modelDefVersionsDir {
 				defPath := filepath.Join(modelDefVersionsDirPath, defVersion.Name())
 
@@ -91,6 +99,7 @@ func (erh *EntityRegistrationHelper) SeedComponents() {
 					erh.errorChan <- mutils.ErrReadDir(errors.Wrapf(err, "error while reading directory for registering components"), modelVersionsDirPath)
 					continue
 				}
+				fmt.Println("REACHED 102")
 				for _, entity := range entities {
 					entityPath := filepath.Join(defPath, entity.Name())
 					if entity.IsDir() {
@@ -99,6 +108,7 @@ func (erh *EntityRegistrationHelper) SeedComponents() {
 							relationships = append(relationships, entityPath)
 						case "policies":
 						default:
+							fmt.Println("REACHED 111 ")
 							erh.generateComponents(entityPath) // register components first
 						}
 					}
@@ -114,6 +124,7 @@ func (erh *EntityRegistrationHelper) SeedComponents() {
 // reads component definitions from files and sends them to the component channel
 func (erh *EntityRegistrationHelper) generateComponents(pathToComponents string) {
 	path, err := filepath.Abs(pathToComponents)
+	fmt.Println("REACHED 127 ", pathToComponents)
 	if err != nil {
 		erh.errorChan <- mutils.ErrReadDir(errors.Wrapf(err, "error while getting absolute path for generating components"), pathToComponents)
 		return
@@ -126,13 +137,16 @@ func (erh *EntityRegistrationHelper) generateComponents(pathToComponents string)
 
 		if !info.IsDir() {
 			// Read the component definition from file
-			var comp v1beta1.ComponentDefinition
+			var comp model.ComponentDefinition
 			byt, err := os.ReadFile(path)
+			fmt.Println("REACHED 142 ")
 			if err != nil {
 				erh.errorChan <- mutils.ErrReadFile(errors.Wrapf(err, fmt.Sprintf("unable to read file at %s", path)), path)
 				return nil
 			}
+
 			err = json.Unmarshal(byt, &comp)
+			fmt.Println("REACHED 149 ", comp.DisplayName, err)
 			if err != nil {
 				erh.errorChan <- mutils.ErrMarshal(errors.Wrapf(err, fmt.Sprintf("unmarshal json failed for %s", path)))
 				return nil
@@ -196,15 +210,15 @@ func (erh *EntityRegistrationHelper) watchComponents(ctx context.Context) {
 	for {
 		select {
 		case comp := <-erh.componentChan:
+			fmt.Println("comp----------------------: ", comp.DisplayName)
 			connectionKind := comp.Model.Registrant.Kind
-
-			isRegistrantError, isModelError, err = erh.regManager.RegisterEntity(v1beta1.Connection{
+			isRegistrantError, isModelError, err = erh.regManager.RegisterEntity(connection.Connection{
 				Kind: connectionKind,
 			}, &comp)
 			if err != nil {
 				err = core.ErrRegisterEntity(err, string(comp.Type()), comp.DisplayName)
 			}
-			helpers.HandleError(v1beta1.Connection{
+			helpers.HandleError(connection.Connection{
 				Kind: connectionKind,
 			}, &comp, err, isModelError, isRegistrantError)
 		// case rel := <-erh.relationshipChan:
@@ -231,7 +245,7 @@ func (erh *EntityRegistrationHelper) watchComponents(ctx context.Context) {
 		}
 
 		if err != nil {
-			go func() { erh.errorChan <- err }()
+			// go func() { erh.errorChan <- err }()
 		}
 	}
 }

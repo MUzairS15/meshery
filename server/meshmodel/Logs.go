@@ -27,7 +27,7 @@ func (erh *EntityRegistrationHelper) registryLog() {
 	for _, host := range hosts {
 
 		eventBuilder := events.NewEvent().FromSystem(sysID).FromUser(sysID).WithCategory("entity").WithAction("get_summary")
-		successMessage := fmt.Sprintf("For registrant %s successfully imported", host.Hostname)
+		successMessage := fmt.Sprintf("For registrant %s successfully imported", host.Kind)
 		appendIfNonZero := func(value int64, label string) {
 			if value != 0 {
 				successMessage += fmt.Sprintf(" %d %s", value, label)
@@ -40,18 +40,18 @@ func (erh *EntityRegistrationHelper) registryLog() {
 
 		log.Info(successMessage)
 		eventBuilder.WithMetadata(map[string]interface{}{
-			"Hostname": host.Hostname,
+			"Hostname": host.Kind,
 		})
 		eventBuilder.WithSeverity(events.Informational).WithDescription(successMessage)
 		successEvent := eventBuilder.Build()
 		_ = provider.PersistEvent(successEvent)
 
-		failLog, err := helpers.FailedEventCompute(host.Hostname, sysID, &provider, "", erh.handlerConfig.EventBroadcaster)
+		failLog, err := helpers.FailedEventCompute(host.Kind, sysID, &provider, "", erh.handlerConfig.EventBroadcaster)
 		if err != nil {
 			log.Error(err)
 		}
 		if failLog != "" {
-			log.Error(meshmodel.ErrRegisteringEntity(failLog, host.Hostname))
+			log.Error(meshmodel.ErrRegisteringEntity(failLog, host.Kind))
 		}
 
 	}
