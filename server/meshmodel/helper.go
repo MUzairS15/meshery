@@ -16,8 +16,8 @@ import (
 	"github.com/layer5io/meshkit/models/meshmodel/core/v1alpha2"
 	_models "github.com/layer5io/meshkit/models/meshmodel/core/v1beta1"
 
-	"github.com/meshery/schemas/models/v1beta1/model"
-		"github.com/meshery/schemas/models/v1beta1/connection"
+	"github.com/meshery/schemas/models/v1beta1/connection"
+	"github.com/meshery/schemas/models/v1beta1/component"
 
 	meshmodel "github.com/layer5io/meshkit/models/meshmodel/registry"
 	mutils "github.com/layer5io/meshkit/utils"
@@ -31,7 +31,7 @@ var RelativeRelationshipsPath = "relationships"
 type EntityRegistrationHelper struct {
 	handlerConfig    *models.HandlerConfig
 	regManager       *meshmodel.RegistryManager
-	componentChan    chan model.ComponentDefinition
+	componentChan    chan component.ComponentDefinition
 	relationshipChan chan v1alpha2.RelationshipDefinition
 	errorChan        chan error
 	log              logger.Handler
@@ -41,7 +41,7 @@ func NewEntityRegistrationHelper(hc *models.HandlerConfig, rm *meshmodel.Registr
 	return &EntityRegistrationHelper{
 		handlerConfig:    hc,
 		regManager:       rm,
-		componentChan:    make(chan model.ComponentDefinition),
+		componentChan:    make(chan component.ComponentDefinition),
 		relationshipChan: make(chan v1alpha2.RelationshipDefinition),
 		errorChan:        make(chan error),
 		log:              log,
@@ -137,7 +137,7 @@ func (erh *EntityRegistrationHelper) generateComponents(pathToComponents string)
 
 		if !info.IsDir() {
 			// Read the component definition from file
-			var comp model.ComponentDefinition
+			var comp component.ComponentDefinition
 			byt, err := os.ReadFile(path)
 			fmt.Println("REACHED 142 ")
 			if err != nil {
