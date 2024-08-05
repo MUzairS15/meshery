@@ -131,6 +131,7 @@ const (
 	ErrDeleteResourceCode                 = "meshery-server-1353"
 	ErrRecreateResourceCode               = "meshery-server-1354"
 	ErrUpdateResourceCode                 = "meshery-server-1355"
+	ErrMarshallingDesignIntoYAMLCode      = "meshery-server-1135"
 )
 
 var (
@@ -554,4 +555,8 @@ func ErrUpdateResource(name, namespace string) error {
 		[]string{},
 		[]string{"Possible causes include invalid resource configuration, insufficient permissions, or network issues."},
 		[]string{"Verify the resource configuration and ensure it is correct. Ensure you have the necessary permissions to update the resource. Check network connectivity to the Kubernetes cluster."})
+}
+
+func ErrMarshallingDesignIntoYAML(err error) error {
+	return errors.New(ErrMarshallingDesignIntoYAMLCode, errors.Alert, []string{"Failed to marshal design into YAML"}, []string{err.Error()}, []string{"unable to marshal design into YAML", "design may be corrupted"}, []string{"check if the design is valid and not corrupted"})
 }
