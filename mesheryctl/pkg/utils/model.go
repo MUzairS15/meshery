@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -72,14 +73,28 @@ func (m *ModelCSV) UpdateModelDefinition(modelDef *model.ModelDefinition) error 
 		if key == "svgColor" || key == "svgWhite" {
 			svg, err := utils.Cast[string](modelMetadata[key])
 			if err == nil {
-				metadata[key], err = utils.UpdateSVGString(svg, SVG_WIDTH, SVG_HEIGHT)
+				metadata[key], err = utils.UpdateSVGString(svg, SVG_WIDTH, SVG_HEIGHT, false)
 				if err != nil {
 					// If svg cannot be updated, assign the svg value as it is
 					metadata[key] = modelMetadata[key]
 				}
 			}
 		}
-		metadata[key] = modelMetadata[key]
+		if key == "capabilities" {
+			val, err := utils.Cast[string](modelMetadata[key])
+			if err != nil {
+				return err
+			}
+			var capabilitiesMap map[string]interface{}
+			err = json.Unmarshal([]byte(val), &capabilitiesMap)
+			if err != nil {
+				return err
+			}
+			metadata[key] = capabilitiesMap
+		} else {
+			metadata[key] = modelMetadata[key]
+
+		}
 	}
 
 	isAnnotation := false

@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -20,17 +21,17 @@ const (
 )
 
 type ComponentCSV struct {
-	Registrant         string `json:"registrant" csv:"registrant"`
-	Model              string `json:"model" csv:"model"`
-	Component          string `json:"component" csv:"component"`
-	Description        string `json:"description" csv:"description"`
-	Shape              string `json:"shape" csv:"shape"`
-	PrimaryColor       string `json:"primaryColor" csv:"primaryColor"`
-	SecondaryColor     string `json:"secondaryColor" csv:"secondaryColor"`
-	SVGColor           string `json:"svgColor" csv:"svgColor"`
-	SVGWhite           string `json:"svgWhite" csv:"svgWhite"`
-	SVGComplete        string `json:"svgComplete" csv:"svgComplete"`
-	HasSchema          string `json:"hasSchema" csv:"hasSchema"`
+	Registrant     string `json:"registrant" csv:"registrant"`
+	Model          string `json:"model" csv:"model"`
+	Component      string `json:"component" csv:"component"`
+	Description    string `json:"description" csv:"description"`
+	Shape          string `json:"shape" csv:"shape"`
+	PrimaryColor   string `json:"primaryColor" csv:"primaryColor"`
+	SecondaryColor string `json:"secondaryColor" csv:"secondaryColor"`
+	SVGColor       string `json:"svgColor" csv:"svgColor"`
+	SVGWhite       string `json:"svgWhite" csv:"svgWhite"`
+	SVGComplete    string `json:"svgComplete" csv:"svgComplete"`
+	// HasSchema          string `json:"hasSchema" csv:"hasSchema"` No column in the CSV
 	Docs               string `json:"docs" csv:"docs"`
 	StyleOverrides     string `json:"styleOverrides" csv:"styleOverrides"`
 	Styles             string `json:"styles" csv:"styles"`
@@ -81,14 +82,28 @@ func (c *ComponentCSV) UpdateCompDefinition(compDef *component.ComponentDefiniti
 		if key == "svgColor" || key == "svgWhite" {
 			svg, err := utils.Cast[string](compMetadata[key])
 			if err == nil {
-				metadata[key], err = utils.UpdateSVGString(svg, SVG_WIDTH, SVG_HEIGHT)
+				metadata[key], err = utils.UpdateSVGString(svg, SVG_WIDTH, SVG_HEIGHT, false)
 				if err != nil {
 					// If svg cannot be updated, assign the svg value as it is
 					metadata[key] = compMetadata[key]
 				}
 			}
 		}
-		metadata[key] = compMetadata[key]
+		if key == "capabilities" {
+			val, err := utils.Cast[string](compMetadata[key])
+			if err != nil {
+				return (err)
+			}
+			var capabilitiesMap map[string]interface{}
+			err = json.Unmarshal([]byte(val), &capabilitiesMap)
+			if err != nil {
+				return err
+			}
+			metadata[key] = capabilitiesMap
+		} else {
+			metadata[key] = compMetadata[key]
+
+		}
 	}
 
 	isAnnotation := false
@@ -297,6 +312,7 @@ func ConvertCompDefToCompCSV(modelcsv *ModelCSV, compDef component.ComponentDefi
 	compCSV.ModelDisplayName = modelcsv.ModelDisplayName
 	compCSV.Category = modelcsv.Category
 	compCSV.SubCategory = modelcsv.SubCategory
+	compCSV.Capabilities = modelcsv.Capabilities
 
 	return &compCSV
 }
