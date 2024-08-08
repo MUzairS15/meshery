@@ -37,11 +37,17 @@
         "from": [
           {
             "kind": "Service",
-            "model": "kubernetes"
+            "model": "kubernetes",
+            "patchRefs": [
+              []
+            ]
           },
           {
             "kind": "Ingress",
-            "model": "kubernetes"
+            "model": "kubernetes",
+            "patchRefs": [
+              []
+            ]
           }
         ],
         "to": [
