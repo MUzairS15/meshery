@@ -12,7 +12,7 @@ export default function useDesignLifecycle() {
   const [designId, setDesignId] = useState();
   const [designJson, setDesignJson] = useState({
     name: designName,
-    services: {},
+    components: [],
   });
   const [designYaml, setDesignyaml] = useState('');
   const { notify } = useNotification();
@@ -29,9 +29,17 @@ export default function useDesignLifecycle() {
    * @param {Types.ComponentDefinition} componentDefinition
    */
   function onSettingsChange(componentDefinition, formReference) {
-    const { kind, apiVersion, model } = componentDefinition;
-    const modelVersion = model.version;
-    const modelName = model.name;
+    const {
+      component,
+      schemaVersion,
+      version,
+      model: {
+        name: modelName,
+        registrant: modelRegistrant,
+        version: modelVersion,
+        category: modelCategory,
+      },
+    } = componentDefinition;
 
     /**
      * Handles actual design-json change in response to form-data change
@@ -39,21 +47,42 @@ export default function useDesignLifecycle() {
      */
     return function handledesignJsonChange(formData) {
       const referKey = formReference.current.referKey;
-      const { name, namespace, labels, annotations, ...settings } = formData;
-
-      const currentJson = { ...designJson };
-      currentJson.services[referKey] = {
-        name,
-        namespace,
-        labels,
-        annotations,
-        type: kind,
-        apiVersion,
-        model: modelName,
-        version: modelVersion,
-        settings,
+      const { namespace, labels, annotations, ...configuration } = formData;
+      const newInput = {
+        id: referKey,
+        schemaVersion,
+        version,
+        component,
+        model: {
+          modelName,
+          modelVersion,
+          modelCategory,
+          modelRegistrant,
+        },
+        configuration: {
+          metadata: {
+            labels,
+            annotations,
+            namespace,
+          },
+          ...configuration,
+        },
       };
-      setDesignJson(currentJson);
+      setDesignJson((prev) => {
+        let newestKey = false;
+        const currentJson = prev.components.map((val) => {
+          if (val.id == referKey) {
+            newestKey = true;
+            return newInput;
+          }
+          return val;
+        });
+        if (!newestKey) {
+          currentJson.push(newInput);
+        }
+
+        return { name: prev.name, components: [...currentJson] };
+      });
     };
   }
 
@@ -144,6 +173,7 @@ export default function useDesignLifecycle() {
   const updateDesignData = ({ yamlData }) => {
     try {
       const designData = jsYaml.load(yamlData);
+      console.log('line 154 : ', designData, yamlData);
       setDesignJson(designData);
     } catch (err) {
       notify({
