@@ -13,6 +13,7 @@ export default function useDesignLifecycle() {
   const [designJson, setDesignJson] = useState({
     name: designName,
     components: [],
+    schemaVersion: 'designs.meshery.io/v1beta1',
   });
   const [designYaml, setDesignyaml] = useState('');
   const { notify } = useNotification();
@@ -47,17 +48,18 @@ export default function useDesignLifecycle() {
      */
     return function handledesignJsonChange(formData) {
       const referKey = formReference.current.referKey;
-      const { namespace, labels, annotations, ...configuration } = formData;
+      const { name, namespace, labels, annotations, ...configuration } = formData;
       const newInput = {
         id: referKey,
         schemaVersion,
         version,
         component,
+        displayName: name,
         model: {
-          modelName,
-          modelVersion,
-          modelCategory,
-          modelRegistrant,
+          name: modelName,
+          version: modelVersion,
+          category: modelCategory,
+          registrant: modelRegistrant,
         },
         configuration: {
           metadata: {
@@ -70,13 +72,14 @@ export default function useDesignLifecycle() {
       };
       setDesignJson((prev) => {
         let newestKey = false;
-        const currentJson = prev.components.map((val) => {
-          if (val.id == referKey) {
-            newestKey = true;
-            return newInput;
-          }
-          return val;
-        });
+        const currentJson =
+          prev.components?.map((val) => {
+            if (val.id == referKey) {
+              newestKey = true;
+              return newInput;
+            }
+            return val;
+          }) || [];
         if (!newestKey) {
           currentJson.push(newInput);
         }
@@ -173,7 +176,6 @@ export default function useDesignLifecycle() {
   const updateDesignData = ({ yamlData }) => {
     try {
       const designData = jsYaml.load(yamlData);
-      console.log('line 154 : ', designData, yamlData);
       setDesignJson(designData);
     } catch (err) {
       notify({
