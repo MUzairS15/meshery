@@ -43,6 +43,10 @@ func CheckMesheryctlClientVersion(build string) {
 		Log.Warn(fmt.Errorf("unable to check for latest version of mesheryctl. %s", fmt.Errorf("no version found")))
 		return
 	}
+	//remove extra white space
+	latestVersion = strings.TrimSpace(latestVersion)
+	build = strings.TrimSpace(build)
+	
 	// If user is running an outdated release, let them know.
 	if latestVersion != build {
 		Log.Infof("A new release of mesheryctl is available: %s → %s", build, latestVersion)
