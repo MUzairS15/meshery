@@ -27,6 +27,7 @@ func (h *Handler) LoginHandler(w http.ResponseWriter, r *http.Request, p models.
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
+	fmt.Println("line 30 in common_handlers.go")
 	p.InitiateLogin(w, r, fromMiddleWare)
 }
 

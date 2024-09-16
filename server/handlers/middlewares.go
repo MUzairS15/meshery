@@ -100,13 +100,16 @@ func (h *Handler) AuthMiddleware(next http.Handler, auth models.AuthenticationMe
 			// }
 			// logrus.Debugf("provider %s", provider)
 			isValid, err := h.validateAuth(provider, req)
+			fmt.Println("line 103 in middlewares.go : ", isValid, err)
 			// logrus.Debugf("validate auth: %t", isValid)
 			if !isValid {
+				fmt.Println("line 106 in middlewares.go : ", isValid, err, !errors.Is(err, models.ErrEmptySession), provider.GetProviderType() == models.RemoteProviderType)
 				if !errors.Is(err, models.ErrEmptySession) && provider.GetProviderType() == models.RemoteProviderType {
 					provider.HandleUnAuthenticated(w, req)
 					return
 				}
 
+				fmt.Println("line 112 in middlewares.go : ")
 				// Local Provider
 				h.LoginHandler(w, req, provider, true)
 				return
