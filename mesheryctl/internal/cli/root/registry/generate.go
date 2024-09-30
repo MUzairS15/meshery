@@ -231,6 +231,11 @@ func InvokeGenerationFromSheet(wg *sync.WaitGroup) error {
 		if err != nil {
 			break
 		}
+
+		if model.Registrant == "Artifact Hub" || model.Registrant == "artifacthub" {
+			continue
+		}
+
 		wg.Add(1)
 		go func(model utils.ModelCSV) {
 			defer func() {
