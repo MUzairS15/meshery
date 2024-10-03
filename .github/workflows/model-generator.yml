@@ -6,7 +6,6 @@ on:
 
 jobs:
   generate-and-update-components:
-    if: github.repository == 'meshery/meshery'
     name: Generate and Update Components
     runs-on: ubuntu-22.04
     steps:
@@ -32,7 +31,7 @@ jobs:
       - name: Generate Models and Components
         run: |
           cd mesheryctl
-          ./mesheryctl registry generate --spreadsheet-id "1DZHnzxYWOlJ69Oguz4LkRVTFM79kC2tuvdwizOJmeMw" --spreadsheet-cred "${{ secrets.INTEGRATION_SPREADSHEET_CRED }}"
+          ./mesheryctl registry generate --spreadsheet-id "1cHVQEnYCIGmEmSKc9NGo8_ylPw5XRj1NmRmv2ord9Zw" --spreadsheet-cred "${{ secrets.INTEGRATION_SPREADSHEET_CRED }}"
 
       - name: Upload artifacts
         if: always()
@@ -53,7 +52,7 @@ jobs:
       - name: Run Model Updater
         run: |
           cd mesheryctl
-          ./mesheryctl registry update -i ../server/meshmodel --spreadsheet-id "1DZHnzxYWOlJ69Oguz4LkRVTFM79kC2tuvdwizOJmeMw"  --spreadsheet-cred "${{ secrets.INTEGRATION_SPREADSHEET_CRED }}"
+          ./mesheryctl registry update -i ../server/meshmodel --spreadsheet-id "1cHVQEnYCIGmEmSKc9NGo8_ylPw5XRj1NmRmv2ord9Zw"  --spreadsheet-cred "${{ secrets.INTEGRATION_SPREADSHEET_CRED }}"
 
       - name: Pull changes from remote
         run: git pull origin master
@@ -68,36 +67,36 @@ jobs:
           commit_message: "New Models generated and updated"
           branch: master
 
-      - name: Send Email on Workflow Failure
-        if: failure()
-        uses: dawidd6/action-send-mail@v3.7.1
-        with:
-          server_address: smtp.gmail.com
-          server_port: 465
-          username: ${{ secrets.MAIL_USERNAME }}
-          password: ${{ secrets.MAIL_PASSWORD }}
-          subject: GitHub Actions - Workflow Failure
-          from: |
-            "Model Generator and Updater" <no-reply@meshery.io>
-          to: developers@meshery.io
-          body: |
-            The GitHub Actions workflow in ${{ github.repository }} has failed.
-            You can find more details in the GitHub Actions log ${{ github.workflow }}.
+      # - name: Send Email on Workflow Failure
+      #   if: failure()
+      #   uses: dawidd6/action-send-mail@v3.7.1
+      #   with:
+      #     server_address: smtp.gmail.com
+      #     server_port: 465
+      #     username: ${{ secrets.MAIL_USERNAME }}
+      #     password: ${{ secrets.MAIL_PASSWORD }}
+      #     subject: GitHub Actions - Workflow Failure
+      #     from: |
+      #       "Model Generator and Updater" <no-reply@meshery.io>
+      #     to: developers@meshery.io
+      #     body: |
+      #       The GitHub Actions workflow in ${{ github.repository }} has failed.
+      #       You can find more details in the GitHub Actions log ${{ github.workflow }}.
 
-      - name: Send Email on Registry Generate Error
-        if: env.registry-generate-error == 'false' #Turn it back to true when we are good with all the errors.
-        uses: dawidd6/action-send-mail@v3.7.1
-        with:
-          server_address: smtp.gmail.com
-          server_port: 465
-          username: ${{ secrets.MAIL_USERNAME }}
-          password: ${{ secrets.MAIL_PASSWORD }}
-          subject: Model Generator Error Log
-          from: |
-            "Model Generator" <no-reply@meshery.io>
-          to: developers@meshery.io
-          body: |
-               The Model Generator workflow (https://github.com/meshery/meshery/actions/workflows/model-generator.yml) encountered one or more errors. Refer to the attached error log for details or review the results of the failed workflow - https://github.com/meshery/meshery/actions/runs/${{ github.run_id }}.
+      # - name: Send Email on Registry Generate Error
+      #   if: env.registry-generate-error == 'false' #Turn it back to true when we are good with all the errors.
+      #   uses: dawidd6/action-send-mail@v3.7.1
+      #   with:
+      #     server_address: smtp.gmail.com
+      #     server_port: 465
+      #     username: ${{ secrets.MAIL_USERNAME }}
+      #     password: ${{ secrets.MAIL_PASSWORD }}
+      #     subject: Model Generator Error Log
+      #     from: |
+      #       "Model Generator" <no-reply@meshery.io>
+      #     to: developers@meshery.io
+      #     body: |
+      #          The Model Generator workflow (https://github.com/meshery/meshery/actions/workflows/model-generator.yml) encountered one or more errors. Refer to the attached error log for details or review the results of the failed workflow - https://github.com/meshery/meshery/actions/runs/${{ github.run_id }}.
 
-               Learn more about the Meshery Registry - https://docs.meshery.io/concepts/logical/registry.
-          attachments: ~/.meshery/logs/registry/registry-errors.log
+      #          Learn more about the Meshery Registry - https://docs.meshery.io/concepts/logical/registry.
+      #     attachments: ~/.meshery/logs/registry/registry-errors.log
