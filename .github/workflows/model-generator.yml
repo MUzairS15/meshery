@@ -12,7 +12,6 @@ jobs:
       - name: Check out code
         uses: actions/checkout@v4
         with:
-          token: ${{ secrets.GH_ACCESS_TOKEN }}
           fetch-depth: 1
 
       - name: Setup Go
